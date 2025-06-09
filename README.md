@@ -2,4 +2,5 @@
 A street-fighter style game set in a zoo full of wild encounters!
 
 
-Fight your way through the 3 main stages of Zoojacked! 
+Plot:
+    The employees have had enough of work! They've highjacked the zoo and are ready to throw hands with anyone! After all, if they can crawl, they can brawl!
