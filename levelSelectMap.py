@@ -7,7 +7,8 @@ import stages.stage1
 import stages.stage2
 import stages.stage3
 import stages.bounusStage
-import stages.tutorialStage
+# Import the consolidated tutorial stage
+import stages.crocodileCreekTutorial # <--- ONLY THIS TUTORIAL IMPORT NOW
 
 class LevelSelectMap:
     def __init__(self):
@@ -20,7 +21,6 @@ class LevelSelectMap:
         # Define levels with their names, numbers, and the RECTANGLE on the map image
         # that the player will click to select them.
         # These coordinates are relative to the top-left of the AA_Map.png image.
-        # You will need to fine-tune these (x, y, width, height) values by trial and error.
         self.levels_data = {
             "Forest": {
                 "level_num": 1,
@@ -44,25 +44,32 @@ class LevelSelectMap:
                 "level_num": 4,
                 "map_rect": pygame.Rect(440, 100, 100, 100), # Example: area around Stingray Bay icon
                 "tooltip": "Stingray Bay Adventure",
-                "module": stages.bounusStage # Assuming bounusStage for now, change as needed
+                "module": stages.bounusStage
             },
             "The Reef Aquarium": {
                 "level_num": 5,
                 "map_rect": pygame.Rect(650, 100, 100, 100), # Example: area around The Reef Aquarium icon
                 "tooltip": "Explore The Reef",
-                "module": stages.bounusStage # Assuming bounusStage for now, change as needed
+                "module": stages.bounusStage
             },
+            # All tutorial-like stages now point to stages.crocodileCreekTutorial
             "Boat Tutorial": {
                 "level_num": 6,
                 "map_rect": pygame.Rect(500, 400, 100, 100), # Placeholder, adjust based on where you want this on the map
                 "tooltip": "Boat Man's Tutorial",
-                "module": stages.tutorialStage
+                "module": stages.crocodileCreekTutorial # <--- CHANGED TO crocodileCreekTutorial
             },
-            "Guest Services": { # <--- NEW LEVEL FOR THE '?' ICON
+            "Guest Services": {
                 "level_num": 7,
-                "map_rect": pygame.Rect(720, 340, 60, 60), # **ADJUST THESE COORDINATES**
+                "map_rect": pygame.Rect(720, 340, 60, 60), # Ensure these are correct for the '?' icon
                 "tooltip": "Help & Information",
-                "module": stages.tutorialStage # Assign a placeholder stage, e.g., tutorialStage for info
+                "module": stages.crocodileCreekTutorial # <--- CHANGED TO crocodileCreekTutorial
+            },
+            "Crocodile Creek Tutorial": {
+                "level_num": 8, # You can re-use level numbers if they lead to the same logic, but different numbers are fine too.
+                "map_rect": pygame.Rect(180, 240, 80, 80), # **ADJUST THESE COORDINATES for the purple dot**
+                "tooltip": "Crocodile Creek Adventure Tutorial",
+                "module": stages.crocodileCreekTutorial # <--- REMAINS crocodileCreekTutorial
             }
         }
 
@@ -134,7 +141,7 @@ class LevelSelectMap:
 
     def get_level_info(self, level_name):
         """Retrieves the full data for a given level name."""
-        return self.levels_data.get(level_name) # Ensure this method is present for main.py
+        return self.levels_data.get(level_name)
 
     def update(self, mouse_pos):
         """Updates the state, particularly for hover effects/tooltips."""

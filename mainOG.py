@@ -1,29 +1,6 @@
 # main.py
 import pygame
 
-# main.py
-import pygame
-
-# Initialize Pygame (main modules)
-pygame.init()
-pygame.font.init()
-
-import config
-import screens
-
-# --- TEMPORARY TEST IMPORTS ---
-try:
-    import stages.tutorialStage
-    print("stages.tutorialStage imported successfully in main.py!")
-except ModuleNotFoundError as e:
-    print(f"Error importing stages.tutorialStage in main.py: {e}")
-# --- END TEMPORARY TEST IMPORTS ---
-
-import levelSelectMap # This is the original line that causes the error
-
-# ... rest of your main.py code
-
-
 # Initialize Pygame (main modules)
 pygame.init()
 pygame.font.init()
