@@ -8,7 +8,7 @@ import stages.stage2
 import stages.stage3
 import stages.bounusStage
 # Import the consolidated tutorial stage
-import stages.crocodileCreekTutorial # <--- ONLY THIS TUTORIAL IMPORT NOW
+import stages.crocodileCreekTutorial # <--- This is the correct import for your tutorial stage
 
 class LevelSelectMap:
     def __init__(self):
@@ -57,19 +57,19 @@ class LevelSelectMap:
                 "level_num": 6,
                 "map_rect": pygame.Rect(500, 400, 100, 100), # Placeholder, adjust based on where you want this on the map
                 "tooltip": "Boat Man's Tutorial",
-                "module": stages.crocodileCreekTutorial # <--- CHANGED TO crocodileCreekTutorial
+                "module": stages.crocodileCreekTutorial # <--- Pointing to the consolidated tutorial
             },
             "Guest Services": {
                 "level_num": 7,
                 "map_rect": pygame.Rect(720, 340, 60, 60), # Ensure these are correct for the '?' icon
                 "tooltip": "Help & Information",
-                "module": stages.crocodileCreekTutorial # <--- CHANGED TO crocodileCreekTutorial
+                "module": stages.crocodileCreekTutorial # <--- Pointing to the consolidated tutorial
             },
             "Crocodile Creek Tutorial": {
-                "level_num": 8, # You can re-use level numbers if they lead to the same logic, but different numbers are fine too.
+                "level_num": 8,
                 "map_rect": pygame.Rect(180, 240, 80, 80), # **ADJUST THESE COORDINATES for the purple dot**
                 "tooltip": "Crocodile Creek Adventure Tutorial",
-                "module": stages.crocodileCreekTutorial # <--- REMAINS crocodileCreekTutorial
+                "module": stages.crocodileCreekTutorial # <--- Pointing to the consolidated tutorial
             }
         }
 
@@ -101,7 +101,7 @@ class LevelSelectMap:
     def _load_map_image(self):
         """Loads the main map image for level selection."""
         try:
-            self.map_image = pygame.image.load("assests/AA_Map.png").convert_alpha()
+            self.map_image = pygame.image.load("assests/AA_Map.png").convert_alpha() # Assuming AA_Map.png is your map image
         except pygame.error as e:
             print(f"Error loading map image (assests/AA_Map.png): {e}")
             self.map_image = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
