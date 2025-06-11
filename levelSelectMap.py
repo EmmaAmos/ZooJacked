@@ -75,12 +75,12 @@ class LevelSelectMap:
 
         self.map_display_width = config.SCREEN_WIDTH * 0.9
         self.map_display_height = config.SCREEN_HEIGHT * 0.9
-        
+
         self._load_map_image()
         if self.map_image:
             original_width, original_height = self.map_image.get_size()
             aspect_ratio = original_width / original_height
-            
+
             if self.map_display_width / aspect_ratio > self.map_display_height:
                 self.map_display_width = int(self.map_display_height * aspect_ratio)
             else:
@@ -101,7 +101,7 @@ class LevelSelectMap:
     def _load_map_image(self):
         """Loads the main map image for level selection."""
         try:
-            self.map_image = pygame.image.load("assests/AA_Map.png").convert_alpha() # Assuming AA_Map.png is your map image
+            self.map_image = pygame.image.load("assests/AA_Map.png").convert_alpha()
         except pygame.error as e:
             print(f"Error loading map image (assests/AA_Map.png): {e}")
             self.map_image = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
@@ -114,18 +114,18 @@ class LevelSelectMap:
             return
 
         original_map_width, original_map_height = self.map_image.get_size()
-        
+
         scale_x = self.map_display_width / original_map_width
         scale_y = self.map_display_height / original_map_height
 
         for level_name, data in self.levels_data.items():
             original_rect = data["map_rect"]
-            
+
             scaled_x = int(original_rect.x * scale_x) + self.map_rect_on_screen.x
             scaled_y = int(original_rect.y * scale_y) + self.map_rect_on_screen.y
             scaled_width = int(original_rect.width * scale_x)
             scaled_height = int(original_rect.height * scale_y)
-            
+
             data["scaled_rect"] = pygame.Rect(scaled_x, scaled_y, scaled_width, scaled_height)
 
     def handle_click(self, mouse_pos):
@@ -175,10 +175,10 @@ class LevelSelectMap:
         if self.hovered_level_name:
             tooltip_text = self.levels_data[self.hovered_level_name]["tooltip"]
             tooltip_surface = self.tooltip_font.render(tooltip_text, True, config.BLACK)
-            
+
             mouse_x, mouse_y = pygame.mouse.get_pos()
             tooltip_rect = tooltip_surface.get_rect(midbottom=(mouse_x, mouse_y - 5))
-            
+
             pygame.draw.rect(screen, config.WHITE, tooltip_rect.inflate(10, 5), border_radius=5)
             screen.blit(tooltip_surface, tooltip_rect)
 
@@ -203,7 +203,7 @@ if __name__ == "__main__":
                 if selected_stage:
                     info = level_map.get_level_info(selected_stage)
                     print(f"Clicked {selected_stage}: Level {info['level_num']}")
-            
+
         level_map.update(mouse_pos)
         level_map.draw(screen)
         pygame.display.flip()
