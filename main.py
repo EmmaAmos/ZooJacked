@@ -1,9 +1,6 @@
 # main.py
 import pygame
 
-# main.py
-import pygame
-
 # Initialize Pygame (main modules)
 pygame.init()
 pygame.font.init()
@@ -12,24 +9,15 @@ import config
 import screens
 
 # --- TEMPORARY TEST IMPORTS ---
-try:
-    import stages.tutorialStage
-    print("stages.tutorialStage imported successfully in main.py!")
-except ModuleNotFoundError as e:
-    print(f"Error importing stages.tutorialStage in main.py: {e}")
+# Removed the stages.tutorialStage import as it caused an error previously and is likely not needed
+# If you still have it in your actual file and it causes issues, remove/comment it out.
+# try:
+#     import stages.tutorialStage
+#     print("stages.tutorialStage imported successfully in main.py!")
+# except ModuleNotFoundError as e:
+#     print(f"Error importing stages.tutorialStage in main.py: {e}")
 # --- END TEMPORARY TEST IMPORTS ---
 
-import levelSelectMap # This is the original line that causes the error
-
-# ... rest of your main.py code
-
-
-# Initialize Pygame (main modules)
-pygame.init()
-pygame.font.init()
-
-import config
-import screens
 import levelSelectMap
 
 # Set up the display
@@ -47,6 +35,7 @@ level_map_instance = levelSelectMap.LevelSelectMap()
 current_screen = "main_menu"
 selected_character = None
 selected_level_info = None # Store the full info dictionary for the selected level
+level_name = None # <--- ADD THIS LINE to store the name of the selected level
 
 # Main game loop
 running = True
@@ -73,9 +62,10 @@ while running:
                     print(f"{selected_character} selected!")
                     current_screen = "level_select"
             elif current_screen == "level_select":
-                level_name = level_map_instance.handle_click(mouse_pos)
-                if level_name:
-                    selected_level_info = level_map_instance.get_level_info(level_name)
+                clicked_level_name = level_map_instance.handle_click(mouse_pos) # Use a new variable name here
+                if clicked_level_name:
+                    level_name = clicked_level_name # Store the level name
+                    selected_level_info = level_map_instance.get_level_info(level_name) # Get info using the name
                     print(f"Selected Level: {selected_level_info['level_num']} ({level_name})")
                     current_screen = "game_play" # Transition to game_play
 
@@ -99,7 +89,7 @@ while running:
             # that takes the screen and selected character as arguments.
             # This function should contain the main game loop for that stage
             # and return when the stage is over (e.g., player wins/loses or exits).
-            print(f"Starting {selected_level_info['name']} with {selected_character}...")
+            print(f"Starting {level_name} with {selected_character}...") # FIXED: Use level_name here
             
             # Here, you would call the main function of your stage.
             # For this to work, each stage file (e.g., stages/stage1.py)
@@ -109,7 +99,7 @@ while running:
             # For now, let's just keep the placeholder text
             screen.fill(config.WHITE)
             font = pygame.font.Font(None, 50)
-            game_text = font.render(f"Playing as {selected_character} in {selected_level_info['name']}!", True, config.BLACK)
+            game_text = font.render(f"Playing as {selected_character} in {level_name}!", True, config.BLACK) # FIXED: Use level_name here
             game_text_rect = game_text.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT // 2))
             screen.blit(game_text, game_text_rect)
             

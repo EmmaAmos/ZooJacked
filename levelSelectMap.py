@@ -2,13 +2,12 @@
 import pygame
 import config
 
-# Import all your stage modules here
+# Importing stages for level selection
 import stages.stage1
 import stages.stage2
 import stages.stage3
 import stages.bounusStage
-# Import the consolidated tutorial stage
-import stages.crocodileCreekTutorial # <--- This is the correct import for your tutorial stage
+import stages.crocodileCreekTutorial
 
 class LevelSelectMap:
     def __init__(self):
@@ -22,54 +21,12 @@ class LevelSelectMap:
         # that the player will click to select them.
         # These coordinates are relative to the top-left of the AA_Map.png image.
         self.levels_data = {
-            "Forest": {
-                "level_num": 1,
-                "map_rect": pygame.Rect(200, 320, 80, 80), # Example: area around the birds
-                "tooltip": "Forest Level",
-                "module": stages.stage1
-            },
-            "Desert": {
-                "level_num": 2,
-                "map_rect": pygame.Rect(180, 240, 80, 80), # Example: area around Crocodile Creek
-                "tooltip": "Desert Level",
-                "module": stages.stage2
-            },
-            "Kangaroo Outback": {
-                "level_num": 3,
-                "map_rect": pygame.Rect(120, 420, 80, 80), # Example: area around the kangaroo
-                "tooltip": "Kangaroo Outback",
-                "module": stages.stage3
-            },
-            "Stingray Bay": {
-                "level_num": 4,
-                "map_rect": pygame.Rect(440, 100, 100, 100), # Example: area around Stingray Bay icon
-                "tooltip": "Stingray Bay Adventure",
-                "module": stages.bounusStage
-            },
-            "The Reef Aquarium": {
-                "level_num": 5,
-                "map_rect": pygame.Rect(650, 100, 100, 100), # Example: area around The Reef Aquarium icon
-                "tooltip": "Explore The Reef",
-                "module": stages.bounusStage
-            },
-            # All tutorial-like stages now point to stages.crocodileCreekTutorial
-            "Boat Tutorial": {
-                "level_num": 6,
-                "map_rect": pygame.Rect(500, 400, 100, 100), # Placeholder, adjust based on where you want this on the map
-                "tooltip": "Boat Man's Tutorial",
-                "module": stages.crocodileCreekTutorial # <--- Pointing to the consolidated tutorial
-            },
-            "Guest Services": {
-                "level_num": 7,
-                "map_rect": pygame.Rect(720, 340, 60, 60), # Ensure these are correct for the '?' icon
-                "tooltip": "Help & Information",
-                "module": stages.crocodileCreekTutorial # <--- Pointing to the consolidated tutorial
-            },
             "Crocodile Creek Tutorial": {
-                "level_num": 8,
+                "level_num": 0,
                 "map_rect": pygame.Rect(180, 240, 80, 80), # **ADJUST THESE COORDINATES for the purple dot**
                 "tooltip": "Crocodile Creek Adventure Tutorial",
-                "module": stages.crocodileCreekTutorial # <--- Pointing to the consolidated tutorial
+                "module": stages.crocodileCreekTutorial, # Pointing to the consolidated tutorial
+                "button_color": config.PURPLE # Added color for visual button
             }
         }
 
@@ -97,6 +54,7 @@ class LevelSelectMap:
 
         self.hovered_level_name = None
         self.tooltip_font = pygame.font.Font(None, 30)
+        self.button_font = pygame.font.Font(None, 24) # Font for button numbers/text
 
     def _load_map_image(self):
         """Loads the main map image for level selection."""
@@ -167,10 +125,23 @@ class LevelSelectMap:
         title_rect = title_surface.get_rect(center=(config.SCREEN_WIDTH // 2, 40))
         screen.blit(title_surface, title_rect)
 
-        # Optional: Draw debug rectangles for clickable areas (remove in final game)
-        # for level_name, data in self.levels_data.items():
-        #     # Draw an outline for debugging the clickable areas
-        #     pygame.draw.rect(screen, config.RED, data["scaled_rect"], 2)
+        # Draw the buttons for each level
+        for level_name, data in self.levels_data.items():
+            button_rect = data["scaled_rect"]
+            button_color = data["button_color"]
+
+            # Highlight if hovered
+            if level_name == self.hovered_level_name:
+                pygame.draw.rect(screen, config.WHITE, button_rect.inflate(10, 10), border_radius=5) # Background highlight
+                pygame.draw.rect(screen, button_color, button_rect, border_radius=5) # Original button
+            else:
+                pygame.draw.rect(screen, button_color, button_rect, border_radius=5)
+
+            # Draw level number or name on the button
+            level_text_surface = self.button_font.render(str(data["level_num"]), True, config.WHITE if level_name == self.hovered_level_name else config.BLACK)
+            level_text_rect = level_text_surface.get_rect(center=button_rect.center)
+            screen.blit(level_text_surface, level_text_rect)
+
 
         if self.hovered_level_name:
             tooltip_text = self.levels_data[self.hovered_level_name]["tooltip"]
@@ -186,6 +157,25 @@ class LevelSelectMap:
 if __name__ == "__main__":
     pygame.init()
     pygame.font.init()
+
+    # Create a dummy config module for testing purposes
+    class Config:
+        SCREEN_WIDTH = 1000
+        SCREEN_HEIGHT = 700
+        FONT_SIZE_MAIN_TITLE = 70
+        BLACK = (0, 0, 0)
+        WHITE = (255, 255, 255)
+        RED = (255, 0, 0)
+        GREEN = (0, 200, 0)
+        BLUE = (0, 0, 200)
+        YELLOW = (255, 255, 0)
+        BROWN = (139, 69, 19)
+        CYAN = (0, 255, 255)
+        ORANGE = (255, 165, 0)
+        LIGHT_GREY = (200, 200, 200)
+        PURPLE = (128, 0, 128)
+
+    config = Config() # Override config with the dummy for testing
 
     screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
     pygame.display.set_caption("Level Select Map Test")
