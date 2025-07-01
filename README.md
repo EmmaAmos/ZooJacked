@@ -3,4 +3,4 @@ A street-fighter style game set in a zoo full of wild encounters!
 
 
 Plot:
-    The employees have had enough of work! They've highjacked the zoo and are ready to throw hands with anyone! After all, if they can crawl, they can brawl!
+   Join an (somewhat) secret fighting organization hidden in the zoo! Throw hands with familiar faces and don't get caught by the manager!
