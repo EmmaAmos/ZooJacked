@@ -1,8 +1,9 @@
 # config.py
 
 # Screen Dimensions
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 700
+FONT_SIZE_MAIN_TITLE = 70
 
 # Colors (add these if they're not already present)
 BLACK = (0, 0, 0)
@@ -31,3 +32,9 @@ BUTTON_RADIUS = 10
 CHAR_IMG_WIDTH = 200
 CHAR_IMG_HEIGHT = 200
 CHAR_SPACING = 50 # Space between characters
+
+
+# Game Physics and Player Constants (NEW)
+PLAYER_SPEED = 5        # How many pixels the player moves per frame horizontally
+GRAVITY = 0.8           # Gravity strength, pulls objects down
+GROUND_HEIGHT = 50      # Distance from bottom of screen to the "ground" level

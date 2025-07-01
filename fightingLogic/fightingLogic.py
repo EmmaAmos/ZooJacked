@@ -1,60 +1,108 @@
-from main import Character, character  # Importing Character and character from main.py
-from sprites import Enemy  # Importing only Enemy from sprites.py
+# fightingLogic/fightingLogic.py
+import pygame
+import config
 
-class FightingLogic:
-    def __init__(self, player_character: Character, enemy: Enemy):
-        self.player = player_character
-        self.enemy = enemy
+class Player(pygame.sprite.Sprite):
+    def __init__(self, character_name, initial_x, initial_y, is_player_controlled=True):
+        super().__init__()
+        self.character_name = character_name
+        self.is_player_controlled = is_player_controlled
+        self.image = self._load_sprite()
+        self.rect = self.image.get_rect(midbottom=(initial_x, initial_y))
 
-    def handle_input(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_w:  # Move forward
-                self.player.move_forward()
-            elif event.key == pygame.K_a:  # Move backward
-                self.player.move_backward()
-            elif event.key == pygame.K_SPACE:  # Jump
-                self.player.jump()
-        elif event.type == pygame.MOUSEBUTTONDOWN:  # Punch
-            self.player.punch()
-            self.check_punch_collision()
+        # Movement variables
+        self.vel_x = 0
+        self.vel_y = 0
+        self.on_ground = True
+        self.jump_strength = -20 # Negative for upwards movement in Pygame
 
-    def check_punch_collision(self):
-        # Check if the player's punch hits the enemy
-        if self.player.is_punching and self.player.hitbox.colliderect(self.enemy.hitbox):
-            self.enemy.take_damage()
+        # Animation states (for later)
+        self.state = "idle"
+        # self.animations = self._load_animations() # Placeholder for later
 
-        # Check if the enemy punches the player
-        if self.enemy.is_punching and self.enemy.hitbox.colliderect(self.player.hitbox):
-            self.player.take_damage()
+    def _load_sprite(self):
+        #Loads the character sprite based on the name.
+        sprite_path = ""
+        if self.character_name == "The Boat Man":
+            sprite_path = "sprites/EmployeePlaceHolder_Male.jpg"
+        elif self.character_name == "The Log Lady":
+            sprite_path = "sprites/EmployeePlaceHolder_Female.jpg"
 
-# Example usage in main.py
-if __name__ == "__main__":
-    pygame.init()
-    screen = pygame.display.set_mode((800, 600))
-    clock = pygame.time.Clock()
+        try:
+            image = pygame.image.load(sprite_path).convert()
+            # Scale the character sprite for visibility, adjust as needed
+            image = pygame.transform.scale(image, (150, 150))
+            return image
+        except pygame.error as e:
+            print(f"Error loading character sprite ({sprite_path}): {e}")
+            # YOU NEED TO ADD THE REST OF THE ERROR HANDLING HERE
+            # (e.g., creating a placeholder surface and returning it)
+            # This part was cut off in your provided code,
+            # but it's crucial for preventing a crash if the image doesn't load.
+            # Example (from my previous suggestion):
+            placeholder = pygame.Surface((150, 150), pygame.SRCALPHA)
+            color = config.BLUE if self.is_player_controlled else config.RED
+            pygame.draw.circle(placeholder, color, (75, 75), 75)
+            font = pygame.font.Font(None, 20)
+            text = font.render("NO IMG", True, config.WHITE)
+            text_rect = text.get_rect(center=(75, 75))
+            placeholder.blit(text, text_rect)
+            return placeholder
 
-    # Initialize player and enemy
-    player = Character(x=100, y=300)  # Example starting position
-    enemy = Enemy(x=500, y=300)  # Example starting position
-    logic = FightingLogic(player, enemy)
 
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            logic.handle_input(event)
+    def update(self):
+        """Update the player's position and state."""
+        # Apply gravity
+        if not self.on_ground:
+            self.vel_y += config.GRAVITY # Assuming GRAVITY is defined in config.py
+            if self.vel_y > 10: # Cap downward velocity
+                self.vel_y = 10
 
-        # Update game state
-        player.update()
-        enemy.update()
+        # Update position
+        self.rect.x += self.vel_x
+        self.rect.y += self.vel_y
 
-        # Render game
-        screen.fill((0, 0, 0))  # Clear screen with black
-        player.draw(screen)
-        enemy.draw(screen)
-        pygame.display.flip()
+        # Simple floor collision (assuming the bottom of the screen is the floor)
+        # You'll need more sophisticated collision for platforms
+        if self.rect.bottom >= config.SCREEN_HEIGHT - config.GROUND_HEIGHT: # Assuming GROUND_HEIGHT in config
+            self.rect.bottom = config.SCREEN_HEIGHT - config.GROUND_HEIGHT
+            self.vel_y = 0
+            self.on_ground = True
 
-        clock.tick(60)
+        # Keep player within screen bounds horizontally (optional for fighting game)
+        if self.rect.left < 0:
+            self.rect.left = 0
+            self.vel_x = 0
+        if self.rect.right > config.SCREEN_WIDTH:
+            self.rect.right = config.SCREEN_WIDTH
+            self.vel_x = 0
 
-    pygame.quit()
+
+    def move(self, direction):
+        """Move the player horizontally. -1 for left, 1 for right."""
+        self.vel_x = direction * config.PLAYER_SPEED # Assuming PLAYER_SPEED in config.py
+
+    def stop_move(self):
+        """Stop horizontal movement."""
+        self.vel_x = 0
+
+    def jump(self):
+        """Make the player jump."""
+        if self.on_ground:
+            self.vel_y = self.jump_strength
+            self.on_ground = False
+
+    # --- Placeholder for fighting and enemy logic (for later) ---
+    def attack(self):
+        # Implement attack animation and hit detection
+        print(f"{self.character_name} attacks!")
+
+    def take_damage(self, amount):
+        # Reduce health, play hit animation
+        print(f"{self.character_name} takes {amount} damage!")
+
+    def handle_ai(self, target_player):
+        # Basic AI for the tutorial enemy
+        if not self.is_player_controlled:
+            # Example: simple follow or attack logic
+            pass # Implement later
