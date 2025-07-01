@@ -23,7 +23,7 @@ class LevelSelectMap:
         self.levels_data = {
             "Crocodile Creek Tutorial": {
                 "level_num": 0,
-                "map_rect": pygame.Rect(180, 240, 80, 80), # **ADJUST THESE COORDINATES for the purple dot**
+                "map_rect": pygame.Rect(290, 805, 80, 80), # **ADJUST THESE COORDINATES for the purple dot**
                 "tooltip": "Crocodile Creek Adventure Tutorial",
                 "module": stages.crocodileCreekTutorial, # Pointing to the consolidated tutorial
                 "button_color": config.PURPLE # Added color for visual button
@@ -125,10 +125,22 @@ class LevelSelectMap:
         title_rect = title_surface.get_rect(center=(config.SCREEN_WIDTH // 2, 40))
         screen.blit(title_surface, title_rect)
 
-        # Draw the buttons for each level
+       # Draw the buttons for each level
         for level_name, data in self.levels_data.items():
             button_rect = data["scaled_rect"]
             button_color = data["button_color"]
+
+            # Check if this is the "Crocodile Creek Tutorial" and if we should make it invisible
+            if level_name == "Crocodile Creek Tutorial":
+                # Option 1: Skip drawing the button shape and its text entirely
+                # Continue to the next level in the loop without drawing anything for this one
+                continue # This will skip the rest of the loop for this iteration
+
+                # Option 2 (if you still want a clickable area but no visual button):
+                # You don't draw the rect here, but the handle_click logic would still work.
+                # If you choose this, remove the 'continue' statement above and just
+                # make sure the drawing commands below are within an 'else' block for other levels.
+                # However, for true invisibility, 'continue' is cleaner.
 
             # Highlight if hovered
             if level_name == self.hovered_level_name:
