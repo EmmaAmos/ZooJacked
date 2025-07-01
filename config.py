@@ -16,7 +16,8 @@ BROWN = (139, 69, 19)       # <--- Add this if missing
 CYAN = (0, 255, 255)        # <--- Add this if missing
 ORANGE = (255, 165, 0)      # <--- Add this if missing
 LIGHT_GREY = (200, 200, 200) # <--- Add this if missing
-PURPLE = (128, 0, 128)   
+PURPLE = (128, 0, 128)
+GREY = (128, 128, 128)
 
 # Font Sizes
 FONT_SIZE_MAIN_TITLE = 100
