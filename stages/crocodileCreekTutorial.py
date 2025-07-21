@@ -166,19 +166,20 @@ class CrocodileCreekTutorial:
                 self._draw_health_bar(self.screen, self.player, (50, 20), config.BLUE)
                 self._draw_health_bar(self.screen, self.opponent, (config.SCREEN_WIDTH - 250, 20), config.RED)
 
-                font = pygame.font.Font(None, 60)
-                text_surface = font.render("Welcome to Crocodile Creek Tutorial!", True, config.WHITE)
-                text_rect = text_surface.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.1))
-                self.screen.blit(text_surface, text_rect)
+                #font = pygame.font.Font(None, 60)
+                #text_surface = font.render("Welcome to Crocodile Creek Tutorial!", True, config.WHITE)
+                #text_rect = text_surface.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.1))
+                #self.screen.blit(text_surface, text_rect)
 
-                instruction_font = pygame.font.Font(None, 40)
-                instruction_surface = instruction_font.render(f"You are {self.player.character_name}. Opponent is {self.opponent.character_name}.", True, config.WHITE)
-                instruction_rect = instruction_surface.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.2))
-                self.screen.blit(instruction_surface, instruction_rect)
+                #Controls instructions
+                #instruction_font = pygame.font.Font(None, 40)
+                #instruction_surface = instruction_font.render(f"You are {self.player.character_name}. Opponent is {self.opponent.character_name}.", True, config.WHITE)
+                #instruction_rect = instruction_surface.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.2))
+                #self.screen.blit(instruction_surface, instruction_rect)
 
-                controls_text = instruction_font.render("Controls: 'A' (left), 'S' (right), 'Mouse Click/J' (basic), 'W' (mid), 'E' (super), 'Space' (jump), 'Q' (quit)", True, config.WHITE)
-                controls_rect = controls_text.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.9))
-                self.screen.blit(controls_text, controls_rect)
+                #controls_text = instruction_font.render("Controls: 'A' (left), 'S' (right), 'Mouse Click/J' (basic), 'W' (mid), 'E' (super), 'Space' (jump), 'Q' (quit)", True, config.WHITE)
+                #controls_rect = controls_text.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.9))
+                #self.screen.blit(controls_text, controls_rect)
 
                 # --- 7. Update Display and Control Frame Rate ---
                 pygame.display.flip()

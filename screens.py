@@ -12,6 +12,9 @@ female_character_img = None
 # LevelSelectMap instance
 level_select_map = None # Will be initialized in main.py
 
+# LevelSelectMap instance
+level_select_map = None # Will be initialized in main.py
+
 def load_game_assets():
     """Loads and scales all necessary game images."""
     global boot_up_screen_img, dialog_bg_img, male_character_img, female_character_img
@@ -19,12 +22,13 @@ def load_game_assets():
         boot_up_screen_img = pygame.image.load("assests/bootUpscreen.jpg").convert()
         dialog_bg_img = pygame.image.load("assests/DiologBG.jpg").convert()
 
-        # Assuming EmployeePlaceHolder_Female.jpg is a JPG/PNG now
-        raw_male_character_img = pygame.image.load("sprites/EmployeePlaceHolder_Male.jpg").convert_alpha()
-        raw_female_character_img = pygame.image.load("sprites/EmployeePlaceHolder_Female.jpg").convert_alpha()
+        # Assuming EmployeePlaceHolder_Female.bmp is a JPG/PNG now
+        raw_male_character_img = pygame.image.load("sprites/EmployeePlaceHolder_Male.png").convert_alpha()
+        raw_female_character_img = pygame.image.load("sprites/EmployeePlaceHolder_Female.bmp").convert_alpha()
 
-        male_character_img = pygame.transform.scale(raw_male_character_img, (config.CHAR_IMG_WIDTH, config.CHAR_IMG_HEIGHT))
-        female_character_img = pygame.transform.scale(raw_female_character_img, (config.CHAR_IMG_WIDTH, config.CHAR_IMG_HEIGHT))
+        # These lines need to be consistently indented, typically 4 spaces from the 'try'
+        male_character_img = raw_male_character_img
+        female_character_img = raw_female_character_img
 
     except pygame.error as e:
         print(f"Error loading image: {e}")

@@ -164,6 +164,121 @@ class LevelSelectMap:
 
             pygame.draw.rect(screen, config.WHITE, tooltip_rect.inflate(10, 5), border_radius=5)
             screen.blit(tooltip_surface, tooltip_rect)
+    
+    # --- MENU BUTTON ADDITIONS ---
+        self.menu_button_rect = pygame.Rect(config.SCREEN_WIDTH - 60, 20, 40, 30) # Top right corner
+        self.menu_open = False # State to track if the menu is open
+
+        # Menu options and their rectangles
+        self.menu_options = {
+            "Options": None,
+            "Settings": None,
+            "Character Select": None
+        }
+        self.menu_rect = None # Will be set when menu opens
+        self.option_font = pygame.font.Font(None, 30) # Font for menu items
+        self._calculate_menu_rects() # Initial calculation of menu dimensions
+        # --- END MENU BUTTON ADDITIONS ---
+
+    def _load_levels(self):
+        # This function should be in your actual code.
+        # Placeholder for demonstration if it's missing from the snippet you provided.
+        return {
+            "Crocodile Creek Tutorial": {"level_num": 1, "module": config.CROCODILE_CREEK_TUTORIAL_MODULE}
+        }
+
+    def _create_level_buttons(self):
+        # This function should be in your actual code.
+        # Placeholder for demonstration.
+        for i, (level_name, level_info) in enumerate(self.levels.items()):
+            button_rect = pygame.Rect(50, 100 + i * 70, 200, 50) # Example positioning
+            self.level_buttons.append((level_name, button_rect))
+
+    def _calculate_menu_rects(self):
+        # Calculate menu dimensions and button positions
+        menu_width = 200
+        menu_height = len(self.menu_options) * 40 + 20 # 40 per item, 20 for padding
+        menu_x = config.SCREEN_WIDTH - menu_width - 20 # 20px from right edge
+        menu_y = self.menu_button_rect.bottom + 10 # 10px below the menu button
+        self.menu_rect = pygame.Rect(menu_x, menu_y, menu_width, menu_height)
+
+        # Calculate individual option rects within the menu
+        y_offset = menu_y + 10 # Start 10px from top of menu
+        for option_name in self.menu_options:
+            text_surface = self.option_font.render(option_name, True, config.WHITE)
+            option_rect = text_surface.get_rect(center=(self.menu_rect.centerx, y_offset + text_surface.get_height() // 2))
+            # Adjust to be relative to the menu's topleft for drawing, then move
+            option_rect.x = menu_x + 10 # 10px padding from left of menu
+            self.menu_options[option_name] = option_rect
+            y_offset += 40 # 40px spacing for next option
+
+    def handle_click(self, mouse_pos):
+        # --- HANDLE MENU BUTTON CLICK ---
+        if self.menu_button_rect.collidepoint(mouse_pos):
+            self.menu_open = not self.menu_open # Toggle menu open/close
+            return None # Don't process other clicks if menu button was clicked
+
+        # --- HANDLE MENU ITEM CLICKS (if menu is open) ---
+        if self.menu_open:
+            for option_name, option_rect in self.menu_options.items():
+                if option_rect.collidepoint(mouse_pos):
+                    self.menu_open = False # Close menu after selection
+                    if option_name == "Character Select":
+                        print("DEBUG: Returning to character select screen.")
+                        return "character_select" # Signal back to main.py
+                    elif option_name == "Options":
+                        print("Options button clicked (future functionality)")
+                    elif option_name == "Settings":
+                        print("Settings button clicked (future functionality)")
+            return None # A menu item was clicked, don't process level clicks
+
+        # --- EXISTING LEVEL BUTTON CLICK LOGIC ---
+        for level_name, button_rect in self.level_buttons:
+            if button_rect.collidepoint(mouse_pos):
+                print(f"Level '{level_name}' button clicked!")
+                return level_name
+        return None
+
+    def update(self, mouse_pos):
+        # No specific update logic for this new feature, but keeping the method signature.
+        pass
+
+    def draw(self, screen):
+        # Placeholder: Draw background
+        screen.fill(config.PURPLE) # Assuming you have a blue sky color in config
+
+        # --- EXISTING LEVEL BUTTON DRAWING ---
+        for level_name, button_rect in self.level_buttons:
+            pygame.draw.rect(screen, config.LIGHT_GREY, button_rect, border_radius=5)
+            pygame.draw.rect(screen, config.DARK_GREY, button_rect, 2, border_radius=5)
+            
+            font = pygame.font.Font(None, 36)
+            text_surface = font.render(level_name, True, config.BLACK)
+            text_rect = text_surface.get_rect(center=button_rect.center)
+            screen.blit(text_surface, text_rect)
+
+        # --- DRAW MENU BUTTON (Tree Brown Lines) ---
+        pygame.draw.rect(screen, config.BROWN, self.menu_button_rect, border_radius=5)
+        line_thickness = 3
+        line_padding = 8
+        for i in range(3):
+            y_pos = self.menu_button_rect.y + line_padding + i * (line_thickness + line_padding)
+            pygame.draw.line(screen, config.WHITE,
+                             (self.menu_button_rect.x + line_padding, y_pos),
+                             (self.menu_button_rect.right - line_padding, y_pos),
+                             line_thickness)
+        
+        # --- DRAW MENU (if open) ---
+        if self.menu_open:
+            pygame.draw.rect(screen, config.DARK_GREY, self.menu_rect, border_radius=5)
+            pygame.draw.rect(screen, config.WHITE, self.menu_rect, 2, border_radius=5) # Outline
+
+            for option_name, option_rect in self.menu_options.items():
+                text_surface = self.option_font.render(option_name, True, config.WHITE)
+                # Blit text centered within its calculated rect (which is inside the menu_rect)
+                screen.blit(text_surface, text_surface.get_rect(center=option_rect.center))
+                # Optional: draw outline for individual menu items (for debugging/visual feedback)
+                # pygame.draw.rect(screen, config.RED, option_rect, 1)
 
 # This part runs only if levelSelectMap.py is executed directly (not imported)
 if __name__ == "__main__":

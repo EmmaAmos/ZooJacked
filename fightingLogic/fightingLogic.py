@@ -16,19 +16,14 @@ class Player(pygame.sprite.Sprite):
         self.animation_timer = 0
         
         self._load_all_sprites()
-        self.image = self.animations.get("idle", [pygame.Surface((150, 150), pygame.SRCALPHA)])[0]
+        self.image = self.animations.get("idle", [self._create_placeholder()])[0]
         self.rect = self.image.get_rect(midbottom=(initial_x, initial_y))
 
-        # --- HITBOX ADDITIONS ---
-        # Initialize hitbox relative to the sprite's rect
-        # Adjust these values (x_offset, y_offset, width_reduction, height_reduction)
-        # to control the size and position of the hitbox relative to the sprite.
-        # Example: A hitbox that's 20 pixels smaller on each side (total 40px smaller width/height)
-        # and shifted slightly.
-        self.hitbox_offset_x = 20 # Offset from left of sprite
-        self.hitbox_offset_y = 10 # Offset from top of sprite
-        self.hitbox_width_reduction = 40 # Total reduction from sprite width
-        self.hitbox_height_reduction = 20 # Total reduction from sprite height
+        # --- CHARACTER HITBOX (for taking damage/collisions) ---
+        self.hitbox_offset_x = 20
+        self.hitbox_offset_y = 10
+        self.hitbox_width_reduction = 0 # Set to 0 to make it same width as sprite
+        self.hitbox_height_reduction = 0 # Set to 0 to make it same height as sprite
 
         self.hitbox = pygame.Rect(
             self.rect.x + self.hitbox_offset_x,
@@ -36,13 +31,24 @@ class Player(pygame.sprite.Sprite):
             self.rect.width - self.hitbox_width_reduction,
             self.rect.height - self.hitbox_height_reduction
         )
-        # --- END HITBOX ADDITIONS ---
+        # --- END CHARACTER HITBOX ADDITIONS ---
+
+        # --- ATTACK HITBOX PROPERTIES ---
+        self.attack_hitbox = None # This will hold the Rect for the attack hitbox
+        self.attack_hitbox_width = 70  # Width of the basic punch hitbox
+        self.attack_hitbox_height = 40 # Height of the basic punch hitbox
+        # Offsets for positioning the attack hitbox relative to the player's rect
+        self.attack_hitbox_offset_x_right = 50 # X-offset when facing right (from self.rect.right)
+        self.attack_hitbox_offset_x_left = -20 # X-offset when facing left (from self.rect.left)
+        self.attack_hitbox_offset_y = 20 # Y-offset (from self.rect.y)
+        # --- END ATTACK HITBOX PROPERTIES ---
 
         # Movement variables
         self.vel_x = 0
         self.vel_y = 0
         self.on_ground = True
         self.jump_strength = -20
+        self.facing_right = True # Initial direction
 
         # Animation states
         self.state = "idle"
@@ -64,59 +70,109 @@ class Player(pygame.sprite.Sprite):
 
         self.has_dealt_hit_this_attack = False
 
+    def _create_placeholder(self, width=150, height=150):
+        """Helper function to create a placeholder surface for missing sprites."""
+        placeholder = pygame.Surface((width, height), pygame.SRCALPHA)
+        color = config.BLUE if self.is_player_controlled else config.RED
+        pygame.draw.circle(placeholder, color, (width // 2, height // 2), width // 2 - 5)
+        font = pygame.font.Font(None, 20)
+        text = font.render("NO IMG", True, config.WHITE)
+        text_rect = text.get_rect(center=(width // 2, height // 2))
+        placeholder.blit(text, text_rect)
+        return placeholder
+
     def _load_all_sprites(self):
-        # ... (your existing _load_all_sprites method) ...
-        sprite_sheet_path = ""
-        if self.character_name == "The Boat Man":
-            sprite_sheet_path = "sprites/test_punching.jpg"
-        elif self.character_name == "The Log Lady":
-            sprite_sheet_path = "sprites/EmployeePlaceHolder_Female.jpg"
-
-        try:
-            self.sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
-        except pygame.error as e:
-            print(f"Error loading sprite sheet ({sprite_sheet_path}): {e}")
-            placeholder = pygame.Surface((150, 150), pygame.SRCALPHA)
-            color = config.BLUE if self.is_player_controlled else config.RED
-            pygame.draw.circle(placeholder, color, (75, 75), 75)
-            font = pygame.font.Font(None, 20)
-            text = font.render("NO IMG", True, config.WHITE)
-            text_rect = text.get_rect(center=(75, 75))
-            placeholder.blit(text, text_rect)
-            self.animations["idle"] = [placeholder]
-            self.image = self.animations["idle"][0]
-            return
-
-        frame_width = 150
-        frame_height = 150
-
-        self.animations["idle"] = []
-        for i in range(2):
-            frame = self.sprite_sheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
-            self.animations["idle"].append(frame)
-
-        self.animations["basic_attack"] = []
-        self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(2 * frame_width, 0, frame_width, frame_height)))
-        self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(3 * frame_width, 0, frame_width, frame_height)))
-        self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(0 * frame_width, frame_height, frame_width, frame_height)))
-        self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(1 * frame_width, frame_height, frame_width, frame_height)))
-        self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(2 * frame_width, frame_height, frame_width, frame_height)))
-        self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(3 * frame_width, frame_height, frame_width, frame_height)))
+        """Loads the main sprite sheet and parses individual animation frames."""
         
-        self.animations["walking"] = []
-        start_row_walk = 2 * frame_height
-        for i in range(4):
-             frame = self.sprite_sheet.subsurface(pygame.Rect(i * frame_width, start_row_walk, frame_width, frame_height))
-             self.animations["walking"].append(frame)
+        if self.character_name == "The Boat Man":
+            sprite_sheet_path = "sprites/male_punch.png" # Assuming this is your test_punching.jpg
+            male_frame_width = 150  # Based on test_punching.jpg
+            male_frame_height = 150 # Based on test_punching.jpg
+            
+            try:
+                self.sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
+            except pygame.error as e:
+                print(f"Error loading sprite sheet ({sprite_sheet_path}): {e}")
+                placeholder_img = self._create_placeholder(male_frame_width, male_frame_height)
+                self.animations["idle"] = [placeholder_img]
+                self.image = self.animations["idle"][0]
+                return
 
-        self.animations["jumping"] = []
-        if self.animations["idle"]:
-            self.animations["jumping"].append(self.animations["idle"][0])
-        else:
-            self.animations["jumping"].append(pygame.Surface((frame_width, frame_height), pygame.SRCALPHA))
+            # --- PARSE MALE SPRITE SHEET (Adjusted based on test_punching.jpg layout) ---
+            self.animations["idle"] = []
+            # First row, second image (standing) and possibly the first for a slight variation
+            self.animations["idle"].append(self.sprite_sheet.subsurface(pygame.Rect(1 * male_frame_width, 0, male_frame_width, male_frame_height)))
+            
+            self.animations["basic_attack"] = []
+            # Based on test_punching.jpg, the basic attack starts on the first row, third image, and continues to the second row.
+            # Frame 1: First row, 3rd image (punch start)
+            self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(2 * male_frame_width, 0, male_frame_width, male_frame_height)))
+            # Frame 2: First row, 4th image (punch extension)
+            self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(3 * male_frame_width, 0, male_frame_width, male_frame_height)))
+            # Frame 3: Second row, 1st image (punch with effect)
+            self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(0 * male_frame_width, 1 * male_frame_height, male_frame_width, male_frame_height)))
+            # Frame 4: Second row, 2nd image (punch follow through) - adjust as needed
+            self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(1 * male_frame_width, 1 * male_frame_height, male_frame_width, male_frame_height)))
+            # Add more frames if your basic attack animation has them.
+            # Example if you want more frames from test_punching.jpg:
+            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(2 * male_frame_width, 1 * male_frame_height, male_frame_width, male_frame_height))) # Third frame in second row
+            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(3 * male_frame_width, 1 * male_frame_height, male_frame_width, male_frame_height))) # Fourth frame in second row
+            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(0 * male_frame_width, 2 * male_frame_height, male_frame_width, male_frame_height))) # First frame in third row
+            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(1 * male_frame_width, 2 * male_frame_height, male_frame_width, male_frame_height))) # Second frame in third row
+            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(2 * male_frame_width, 2 * male_frame_height, male_frame_width, male_frame_height))) # Third frame in third row
+            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(3 * male_frame_width, 2 * male_frame_height, male_frame_width, male_frame_height))) # Fourth frame in third row
 
+            self.animations["walking"] = []
+            # Assuming walking frames are in a specific row.
+            # If your walking animation is made of frames from test_punching.jpg, you'll need to define them here.
+            # For now, using idle frames as a placeholder if no dedicated walking frames are shown:
+            self.animations["walking"] = [self.animations["idle"][0]] # Use first idle frame if no distinct walk.
+
+            self.animations["jumping"] = []
+            if self.animations["idle"]: 
+                self.animations["jumping"].append(self.animations["idle"][0]) 
+            else: 
+                self.animations["jumping"].append(self._create_placeholder(male_frame_width, male_frame_height))
+
+
+        elif self.character_name == "The Log Lady":
+            sprite_sheet_path = "sprites/female_punch.bmp" # Assuming .bmp as discussed
+            female_frame_width = 150
+            female_frame_height = 150
+
+            try:
+                self.sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
+            except pygame.error as e:
+                print(f"Error loading sprite sheet ({sprite_sheet_path}): {e}")
+                placeholder_img = self._create_placeholder(female_frame_width, female_frame_height)
+                self.animations["idle"] = [placeholder_img]
+                self.image = self.animations["idle"][0]
+                return
+
+
+            # --- PARSE FEMALE SPRITE SHEET ---
+            self.animations["idle"] = []
+            # The yellow box in female_punch_exampleFrames.jpg is the idle/first frame of attack sequence.
+            self.animations["idle"].append(self.sprite_sheet.subsurface(pygame.Rect(0 * female_frame_width, 0, female_frame_width, female_frame_height)))
+
+            self.animations["basic_attack"] = []
+            # Based on your description: yellow, green, pink boxes
+            # Frame 1 (Yellow box): First row, 1st image
+            self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(0 * female_frame_width, 0, female_frame_width, female_frame_height)))
+            # Frame 2 (Green box): First row, 2nd image (punch with effect)
+            self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(1 * female_frame_width, 0, female_frame_width, female_frame_height)))
+            # Frame 3 (Pink box): First row, 3rd image (punch follow through/end)
+            self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(2 * female_frame_width, 0, female_frame_width, female_frame_height)))
+
+            self.animations["walking"] = [self.animations["idle"][0]] # Use idle frame as placeholder
+            self.animations["jumping"] = [self.animations["idle"][0]] # Use idle frame as placeholder
+        
     def update(self):
-        # ... (your existing update method) ...
+        # Update facing direction based on movement
+        if self.vel_x > 0:
+            self.facing_right = True
+        elif self.vel_x < 0:
+            self.facing_right = False
 
         # Apply gravity
         if not self.on_ground:
@@ -152,6 +208,7 @@ class Player(pygame.sprite.Sprite):
             self.attack_cooldown -= 1
             if self.attack_cooldown == 0:
                 self.is_attacking = False
+                self.attack_hitbox = None # IMPORTANT: Remove attack hitbox when cooldown ends
                 if self.vel_x == 0 and self.on_ground:
                     self.state = "idle" 
                 elif self.vel_x != 0 and self.on_ground:
@@ -160,15 +217,24 @@ class Player(pygame.sprite.Sprite):
                     self.state = "jumping"
                 self.has_dealt_hit_this_attack = False
 
-        # Handle basic attack cooldown
+        # Handle basic attack cooldown (for player to initiate next attack)
         if self.last_hit_by_basic_attack > 0:
             self.last_hit_by_basic_attack -= 1
 
-        # --- UPDATE HITBOX POSITION ---
-        # Update the hitbox position to follow the sprite's rect
+        # --- UPDATE CHARACTER HITBOX POSITION ---
         self.hitbox.x = self.rect.x + self.hitbox_offset_x
         self.hitbox.y = self.rect.y + self.hitbox_offset_y
-        # --- END UPDATE HITBOX POSITION ---
+        # --- END UPDATE CHARACTER HITBOX POSITION ---
+
+        # --- UPDATE ATTACK HITBOX POSITION (if active) ---
+        if self.attack_hitbox:
+            if self.facing_right:
+                self.attack_hitbox.x = self.rect.right - self.attack_hitbox_width + self.attack_hitbox_offset_x_right
+            else:
+                self.attack_hitbox.x = self.rect.left - self.attack_hitbox_offset_x_left # Adjust for left-facing
+            self.attack_hitbox.y = self.rect.y + self.attack_hitbox_offset_y
+        # --- END UPDATE ATTACK HITBOX POSITION ---
+
 
         # ANIMATION UPDATE LOGIC
         self.animation_timer += 1
@@ -176,13 +242,16 @@ class Player(pygame.sprite.Sprite):
             self.animation_timer = 0
             if self.state in self.animations and self.animations[self.state]:
                 self.current_frame = (self.current_frame + 1) % len(self.animations[self.state])
-                self.image = self.animations[self.state][self.current_frame]
+                current_image = self.animations[self.state][self.current_frame] # Get the current frame
             else:
-                self.image = self.animations.get("idle", [pygame.Surface((150, 150), pygame.SRCALPHA)])[0]
+                current_image = self.animations.get("idle", [self._create_placeholder()])[0]
                 self.current_frame = 0
             
-            if self.vel_x < 0:
-                self.image = pygame.transform.flip(self.image, True, False)
+            # Apply flip only once based on facing_right
+            if not self.facing_right:
+                self.image = pygame.transform.flip(current_image, True, False)
+            else:
+                self.image = current_image # Use the original image if facing right
 
     def move(self, direction):
         self.vel_x = direction * config.PLAYER_SPEED
@@ -201,15 +270,36 @@ class Player(pygame.sprite.Sprite):
             self.state = "jumping"
 
     def attack(self, attack_type="basic"):
-        # ... (your existing attack method) ...
         if self.is_attacking or self.attack_cooldown > 0:
             return None
 
         self.is_attacking = True
         self.state = attack_type
-        self.current_frame = 0
-        self.attack_cooldown = 60
-        self.has_dealt_hit_this_attack = False
+        self.current_frame = 0 
+        self.attack_cooldown = 60 # Duration of attack animation/cooldown
+
+        # --- CREATE ATTACK HITBOX WHEN ATTACK STARTS ---
+        if attack_type == "basic":
+            # Position the attack hitbox relative to the player's current position and facing direction
+            if self.facing_right:
+                attack_x = self.rect.right - self.attack_hitbox_width + self.attack_hitbox_offset_x_right
+            else:
+                attack_x = self.rect.left - self.attack_hitbox_offset_x_left # Adjust for left-facing
+            
+            attack_y = self.rect.y + self.attack_hitbox_offset_y
+            
+            self.attack_hitbox = pygame.Rect(
+                attack_x,
+                attack_y,
+                self.attack_hitbox_width,
+                self.attack_hitbox_height
+            )
+            # You might want to delay the activation of the hitbox to a specific animation frame
+            # (e.g., if self.current_frame == 2 for a punch) for more precise hit detection.
+            # For now, it activates immediately with the attack.
+        # --- END CREATE ATTACK HITBOX ---
+
+        self.has_dealt_hit_this_attack = False # Reset hit flag for this new attack
 
         damage = 0
         if attack_type == "basic":
@@ -231,9 +321,6 @@ class Player(pygame.sprite.Sprite):
         return damage
 
     def take_damage(self, amount):
-        # ... (your existing take_damage method, likely where hitbox collision check happens) ...
-        # IMPORTANT: When checking for collisions with other players/entities,
-        # you should now use self.hitbox instead of self.rect.
         if not self.is_attacking:
             self.health -= amount
             if self.health < 0:
@@ -243,7 +330,6 @@ class Player(pygame.sprite.Sprite):
         return False
 
     def handle_ai(self, player_rect, player_is_attacking):
-        # ... (your existing handle_ai method) ...
         if self.is_player_controlled:
             return
 
