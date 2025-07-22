@@ -40,10 +40,8 @@ class LevelSelectMap:
         self.map_display_width = config.SCREEN_WIDTH * 0.9
         self.map_display_height = config.SCREEN_HEIGHT * 0.9
 
-        # Re-load and scale map image (this block is a bit redundant if _load_map_image is called at the very start)
-        # It's better to ensure _load_map_image sets self.map_image, then scale it once.
-        # I'll keep your structure for now but note the redundancy.
-        if self.map_image: # Check if map_image was loaded successfully by the first call
+        # Ensure self.map_image is loaded before scaling calculations
+        if self.map_image:
             original_width, original_height = self.map_image.get_size()
             aspect_ratio = original_width / original_height
 
@@ -59,31 +57,181 @@ class LevelSelectMap:
             self.map_display_height
         )
 
-        self._scale_level_rects()
+        self._scale_level_rects() # This populates 'scaled_rect' for each level in self.levels_data
 
-        # --- ADD THESE LINES ---
-        self.level_buttons = [] # Initialize the list to store level button rects
-        self._create_level_buttons() # Call the method to populate level_buttons
-        # --- END ADDITIONS ---
+        # --- IMPORTANT: Initialization and call for level_buttons ---
+        self.level_buttons = [] # Initialize level_buttons as an empty list
+        self._create_level_buttons() # Call the method to populate level_buttons with (name, scaled_rect) tuples
+        # --- End of important additions ---
 
         self.hovered_level_name = None
         self.tooltip_font = pygame.font.Font(None, 30)
-        self.button_font = pygame.font.Font(None, 24) # Font for button numbers/text
+        self.button_font = pygame.font.Font(None, 24)
 
-        # --- MENU BUTTON ADDITIONS (Ensure these are correctly placed in __init__) ---
-        self.menu_button_rect = pygame.Rect(config.SCREEN_WIDTH - 60, 20, 40, 30) # Top right corner
-        self.menu_open = False # State to track if the menu is open
+        # --- MENU BUTTON ADDITIONS ---
+        self.menu_button_rect = pygame.Rect(config.SCREEN_WIDTH - 60, 20, 40, 30)
+        self.menu_open = False
 
-        # Menu options and their rectangles
         self.menu_options = {
             "Options": None,
             "Settings": None,
             "Character Select": None
         }
-        self.menu_rect = None # Will be set when menu opens
-        self.option_font = pygame.font.Font(None, 30) # Font for menu items
-        self._calculate_menu_rects() # Initial calculation of menu dimensions
+        self.menu_rect = None
+        self.option_font = pygame.font.Font(None, 30)
+        self._calculate_menu_rects()
         # --- END MENU BUTTON ADDITIONS ---
+
+    def _load_map_image(self):
+        # Your existing _load_map_image function
+        try:
+            self.map_image = pygame.image.load("assests/AA_Map.png").convert_alpha()
+        except pygame.error as e:
+            print(f"Error loading map image (assests/AA_Map.png): {e}")
+            self.map_image = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+            self.map_image.fill(config.RED)
+            print("Using a red placeholder for the map image.")
+
+    def _scale_level_rects(self):
+        # Your existing _scale_level_rects function
+        if not self.map_image:
+            return
+
+        original_map_width, original_map_height = self.map_image.get_size()
+
+        scale_x = self.map_display_width / original_map_width
+        scale_y = self.map_display_height / original_map_height
+
+        for level_name, data in self.levels_data.items():
+            original_rect = data["map_rect"]
+
+            scaled_x = int(original_rect.x * scale_x) + self.map_rect_on_screen.x
+            scaled_y = int(original_rect.y * scale_y) + self.map_rect_on_screen.y
+            scaled_width = int(original_rect.width * scale_x)
+            scaled_height = int(original_rect.height * scale_y)
+
+            data["scaled_rect"] = pygame.Rect(scaled_x, scaled_y, scaled_width, scaled_height)
+
+    def _create_level_buttons(self):
+        """
+        Populates self.level_buttons with (level_name, scaled_rect) tuples.
+        This allows handle_click and draw to easily iterate over clickable level areas.
+        """
+        self.level_buttons = [] # Clear the list just in case (e.g., if called again)
+        for level_name, data in self.levels_data.items():
+            if "scaled_rect" in data: # Ensure scaled_rect exists before adding
+                self.level_buttons.append((level_name, data["scaled_rect"]))
+            else:
+                print(f"Warning: Level '{level_name}' has no 'scaled_rect'. Run _scale_level_rects first.")
+
+    def _calculate_menu_rects(self):
+        # Your existing _calculate_menu_rects function
+        menu_width = 200
+        menu_height = len(self.menu_options) * 40 + 20
+        menu_x = config.SCREEN_WIDTH - menu_width - 20
+        menu_y = self.menu_button_rect.bottom + 10
+        self.menu_rect = pygame.Rect(menu_x, menu_y, menu_width, menu_height)
+
+        y_offset = menu_y + 10
+        for option_name in self.menu_options:
+            text_surface = self.option_font.render(option_name, True, config.WHITE)
+            option_rect = text_surface.get_rect(center=(self.menu_rect.centerx, y_offset + text_surface.get_height() // 2))
+            option_rect.x = menu_x + 10
+            self.menu_options[option_name] = option_rect
+            y_offset += 40
+
+    def handle_click(self, mouse_pos):
+        # Your existing handle_click function
+        if self.menu_button_rect.collidepoint(mouse_pos):
+            self.menu_open = not self.menu_open
+            return None
+
+        if self.menu_open:
+            for option_name, option_rect in self.menu_options.items():
+                if option_rect.collidepoint(mouse_pos):
+                    self.menu_open = False
+                    if option_name == "Character Select":
+                        return "character_select"
+                    elif option_name == "Options":
+                        print("Options button clicked (future functionality)")
+                    elif option_name == "Settings":
+                        print("Settings button clicked (future functionality)")
+            return None
+
+        for level_name, button_rect in self.level_buttons: # This now correctly iterates over self.level_buttons
+            if button_rect.collidepoint(mouse_pos):
+                return level_name
+        return None
+
+    def get_level_info(self, level_name):
+        # Your existing get_level_info function
+        return self.levels_data.get(level_name)
+
+    def update(self, mouse_pos):
+        # Your existing update function
+        self.hovered_level_name = None
+        for level_name, data in self.levels_data.items():
+            if data["scaled_rect"].collidepoint(mouse_pos):
+                self.hovered_level_name = level_name
+                break
+
+    def draw(self, screen):
+        # Your existing draw function
+        screen.fill(config.BLACK)
+
+        if self.map_image:
+            scaled_map = pygame.transform.scale(self.map_image, (self.map_display_width, self.map_display_height))
+            screen.blit(scaled_map, self.map_rect_on_screen.topleft)
+
+        title_font = pygame.font.Font(None, config.FONT_SIZE_MAIN_TITLE - 20)
+        title_surface = title_font.render("Select Your Adventure", True, config.WHITE)
+        title_rect = title_surface.get_rect(center=(config.SCREEN_WIDTH // 2, 40))
+        screen.blit(title_surface, title_rect)
+
+        for level_name, data in self.levels_data.items():
+            button_rect = data["scaled_rect"]
+            button_color = data["button_color"]
+
+            if level_name == "Crocodile Creek Tutorial":
+                continue
+
+            if level_name == self.hovered_level_name:
+                pygame.draw.rect(screen, config.WHITE, button_rect.inflate(10, 10), border_radius=5)
+                pygame.draw.rect(screen, button_color, button_rect, border_radius=5)
+            else:
+                pygame.draw.rect(screen, button_color, button_rect, border_radius=5)
+
+            level_text_surface = self.button_font.render(str(data["level_num"]), True, config.WHITE if level_name == self.hovered_level_name else config.BLACK)
+            level_text_rect = level_text_surface.get_rect(center=button_rect.center)
+            screen.blit(level_text_surface, level_text_rect)
+
+        if self.hovered_level_name:
+            tooltip_text = self.levels_data[self.hovered_level_name]["tooltip"]
+            tooltip_surface = self.tooltip_font.render(tooltip_text, True, config.BLACK)
+
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            tooltip_rect = tooltip_surface.get_rect(midbottom=(mouse_x, mouse_y - 5))
+
+            pygame.draw.rect(screen, config.WHITE, tooltip_rect.inflate(10, 5), border_radius=5)
+            screen.blit(tooltip_surface, tooltip_rect)
+        
+        pygame.draw.rect(screen, config.BROWN, self.menu_button_rect, border_radius=5)
+        line_thickness = 3
+        line_padding = 8
+        for i in range(3):
+            y_pos = self.menu_button_rect.y + line_padding + i * (line_thickness + line_padding)
+            pygame.draw.line(screen, config.WHITE,
+                             (self.menu_button_rect.x + line_padding, y_pos),
+                             (self.menu_button_rect.right - line_padding, y_pos),
+                             line_thickness)
+        
+        if self.menu_open:
+            pygame.draw.rect(screen, config.DARK_GREY, self.menu_rect, border_radius=5)
+            pygame.draw.rect(screen, config.WHITE, self.menu_rect, 2, border_radius=5)
+
+            for option_name, option_rect in self.menu_options.items():
+                text_surface = self.option_font.render(option_name, True, config.WHITE)
+                screen.blit(text_surface, text_surface.get_rect(center=option_rect.center))
 
     def _load_map_image(self):
         """Loads the main map image for level selection."""
@@ -252,7 +400,7 @@ class LevelSelectMap:
         
         # --- DRAW MENU (if open) ---
         if self.menu_open:
-            pygame.draw.rect(screen, config.DARK_GREY, self.menu_rect, border_radius=5)
+            pygame.draw.rect(screen, config.GREY, self.menu_rect, border_radius=5)
             pygame.draw.rect(screen, config.WHITE, self.menu_rect, 2, border_radius=5) # Outline
 
             for option_name, option_rect in self.menu_options.items():
