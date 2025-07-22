@@ -60,12 +60,27 @@ female_character_rect = None
 def setup_character_select_rects():
     """Calculates and sets up rects for character images after they are loaded."""
     global male_character_rect, female_character_rect
-    total_char_display_width = config.CHAR_IMG_WIDTH * 2 + config.CHAR_SPACING
-    start_x = (config.SCREEN_WIDTH - total_char_display_width) // 2
-    display_y = config.SCREEN_HEIGHT // 2 - config.CHAR_IMG_HEIGHT // 2
 
+    # Get the actual dimensions of the loaded images
+    male_width, male_height = male_character_img.get_size()
+    female_width, female_height = female_character_img.get_size()
+
+    # Define a desired spacing between the characters
+    spacing = 80 # You can adjust this value to increase or decrease the gap
+
+    # Calculate the total width needed to display both characters plus the spacing
+    total_characters_width = male_width + spacing + female_width
+
+    # Calculate the starting X position to center both characters on the screen
+    start_x = (config.SCREEN_WIDTH - total_characters_width) // 2
+
+    # Define a common Y position for vertical alignment (e.g., center of the screen vertically)
+    # You can adjust this to move them higher or lower.
+    display_y = (config.SCREEN_HEIGHT // 2) - (max(male_height, female_height) // 2)
+
+    # Set the rectangles for each character
     male_character_rect = male_character_img.get_rect(topleft=(start_x, display_y))
-    female_character_rect = female_character_img.get_rect(topleft=(start_x + config.CHAR_IMG_WIDTH + config.CHAR_SPACING, display_y))
+    female_character_rect = female_character_img.get_rect(topleft=(start_x + male_width + spacing, display_y))
 
 # --- Main Menu Screen Drawing Function ---
 def draw_main_menu(screen):
