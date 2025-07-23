@@ -8,18 +8,9 @@ pygame.font.init()
 import config
 import screens
 import stages
+import levelSelectMap # Assuming this is your file for LevelSelectMap class
 
-# --- TEMPORARY TEST IMPORTS ---
-# Removed the stages.tutorialStage import as it caused an error previously and is likely not needed
-# If you still have it in your actual file and it causes issues, remove/comment it out.
-# try:
-#     import stages.tutorialStage
-#     print("stages.tutorialStage imported successfully in main.py!")
-# except ModuleNotFoundError as e:
-#     print(f"Error importing stages.tutorialStage in main.py: {e}")
-# --- END TEMPORARY TEST IMPORTS ---
-
-import levelSelectMap
+# --- Game Initialization ---
 
 # Set up the display
 screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
@@ -27,22 +18,25 @@ pygame.display.set_caption("Zoo-Jacked")
 
 # Load all assets (images) managed by the screens module
 screens.load_game_assets()
-screens.setup_character_select_rects()
+screens.setup_character_select_rects() # Ensure this runs AFTER images are loaded
 
 # Create an instance of the LevelSelectMap
-level_map_instance = levelSelectMap.LevelSelectMap()
+# Consolidating to one instance variable name
+level_select_map = levelSelectMap.LevelSelectMap()
 
 # Game state variables
 current_screen = "main_menu"
 selected_character = None
-selected_level_info = None
-level_name = None
+# selected_level_info will be populated when a level is clicked
+# level_name will be populated when a level is clicked
+current_stage_instance = None # To hold the active stage object when playing a level
 
-# Main game loop
+# --- Main Game Loop ---
 running = True
 while running:
     mouse_pos = pygame.mouse.get_pos()
 
+    # --- Event Handling ---
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -57,66 +51,84 @@ while running:
                 if screens.male_character_rect.collidepoint(mouse_pos):
                     selected_character = "The Boat Man"
                     print(f"{selected_character} selected!")
-                    current_screen = "level_select"
+                    current_screen = "level_select" # Move to level select after character pick
                 elif screens.female_character_rect.collidepoint(mouse_pos):
                     selected_character = "The Log Lady"
                     print(f"{selected_character} selected!")
-                    current_screen = "level_select"
+                    current_screen = "level_select" # Move to level select after character pick
             elif current_screen == "level_select":
-                clicked_level_name = level_map_instance.handle_click(mouse_pos)
-                if clicked_level_name:
-                    level_name = clicked_level_name
-                    selected_level_info = level_map_instance.get_level_info(level_name)
-                    print(f"Selected Level: {selected_level_info['level_num']} ({level_name})")
+                action_result = level_select_map.handle_click(mouse_pos)
 
-                    # --- IMPORTANT CHANGE HERE ---
-                    # Now, when transitioning to game_play, determine the opponent
-                    # and instantiate the stage with both characters
-                    if selected_level_info.get("module") == stages.crocodileCreekTutorial: # Only for this specific tutorial
-                        # Determine the opponent based on the selected character
-                        opponent_character = None
-                        if selected_character == "The Boat Man":
-                            opponent_character = "The Log Lady"
-                        elif selected_character == "The Log Lady":
-                            opponent_character = "The Boat Man"
+                if action_result: # Check if something was clicked (not None)
+                    if action_result == "character_select":
+                        # Transition back to character select screen from menu
+                        current_screen = "story_mode" # "story_mode" is your character select
+                        print("DEBUG: Transitioning to character select screen from level select menu.")
+                    else: # It's a level name that was clicked
+                        level_name = action_result # Store the level name
+                        selected_level_info = level_select_map.get_level_info(level_name)
 
-                        # Create and run the stage instance with character info
-                        # Ensure your stages.crocodileCreekTutorial.CrocodileCreekTutorial class
-                        # accepts these arguments in its __init__ method.
-                        current_stage_instance = stages.crocodileCreekTutorial.CrocodileCreekTutorial(
-                            screen, selected_character, opponent_character
-                        )
-                        current_stage_instance.run() # This will block until the stage exits
-                        current_screen = "level_select" # Go back to level select after stage finishes
-                    else:
-                        # For other stages not yet implemented with character logic,
-                        # you might just go to the placeholder screen or raise an error.
-                        current_screen = "game_play" # Transition to game_play (for placeholder if no specific stage run)
-                    # --- END IMPORTANT CHANGE ---
+                        if selected_level_info: # Ensure level info was actually found
+                            print(f"Selected Level: {selected_level_info['level_num']} ({level_name})")
 
-    # --- Update Logic ---
+                            # --- Level Specific Logic ---
+                            # Check if the selected level is the Crocodile Creek Tutorial
+                            if selected_level_info.get("module") == stages.crocodileCreekTutorial:
+                                # Determine the opponent based on the selected character
+                                opponent_character = None
+                                if selected_character == "The Boat Man":
+                                    opponent_character = "The Log Lady"
+                                elif selected_character == "The Log Lady":
+                                    opponent_character = "The Boat Man"
+
+                                # Create and run the stage instance with character info
+                                # Ensure your stages.crocodileCreekTutorial.CrocodileCreekTutorial class
+                                # accepts these arguments in its __init__ method.
+                                current_stage_instance = stages.crocodileCreekTutorial.CrocodileCreekTutorial(
+                                    screen, selected_character, opponent_character
+                                )
+                                # The .run() method should contain its own game loop and return when done.
+                                current_stage_instance.run() # This will block until the stage exits
+
+                                # After the stage finishes, return to level select
+                                current_screen = "level_select"
+                                print(f"Exiting {level_name}. Returning to level select.")
+                            else:
+                                # For other stages not yet implemented with specific character logic,
+                                # transition to a generic game_play placeholder or more advanced stage handling.
+                                current_screen = "game_play" # Transition to game_play placeholder
+                                print(f"Starting generic game_play for {level_name}.")
+                        else:
+                            print(f"Error: Could not find info for level '{level_name}'")
+
+    # --- Update Logic (for the currently active screen) ---
     if current_screen == "level_select":
-        level_map_instance.update(mouse_pos)
+        level_select_map.update(mouse_pos) # Update level select map for hovers, etc.
+    # Add other update logic for different screens if they have dynamic elements
+    # elif current_screen == "game_play" and current_stage_instance:
+    #     current_stage_instance.update() # If your stages have an update method outside their run()
 
-    # --- Drawing Logic ---
+    # --- Drawing Logic (for the currently active screen) ---
+    screen.fill(config.BLACK) # Clear the screen each frame
+
     if current_screen == "main_menu":
         screens.draw_main_menu(screen)
-    elif current_screen == "story_mode":
+    elif current_screen == "story_mode": # This is now the character selection screen
         screens.draw_character_select_screen(screen, selected_character)
     elif current_screen == "level_select":
-        level_map_instance.draw(screen)
-    elif current_screen == "game_play": # This block now only runs if the above 'if selected_level_info.get("module") == stages.crocodileCreekTutorial' was FALSE
-        # This section is mostly for stages that don't have their 'run' method called directly yet
-        # It's your current placeholder for other stages.
+        level_select_map.draw(screen) # Draw the level map using the single instance
+    elif current_screen == "game_play": # This block now only runs if a non-tutorial level is selected
+        # This section is your placeholder for other stages.
+        # You'll expand this later to dynamically load and run other stages.
         screen.fill(config.WHITE)
         font = pygame.font.Font(None, 50)
         game_text = font.render(f"Playing as {selected_character} in {level_name} (Stage Not Fully Implemented)!", True, config.BLACK)
         game_text_rect = game_text.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT // 2))
         screen.blit(game_text, game_text_rect)
-
     elif current_screen == "game_over":
         screens.draw_game_over_screen(screen)
+    # Add more `elif` conditions for other screens as you implement them
 
-    pygame.display.flip()
+    pygame.display.flip() # Update the full display Surface to the screen
 
-pygame.quit()
+pygame.quit() # Uninitialize pygame modules
