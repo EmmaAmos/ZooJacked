@@ -8,7 +8,7 @@ pygame.font.init()
 import config
 import screens
 import stages
-import levelSelectMap # Assuming this is your file for LevelSelectMap class
+import levelSelectMap 
 
 # --- Game Initialization ---
 

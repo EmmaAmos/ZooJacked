@@ -166,6 +166,7 @@ class CrocodileCreekTutorial:
                 self._draw_health_bar(self.screen, self.player, (50, 20), config.BLUE)
                 self._draw_health_bar(self.screen, self.opponent, (config.SCREEN_WIDTH - 250, 20), config.RED)
 
+        #Use these lines are diolog instructions
                 #font = pygame.font.Font(None, 60)
                 #text_surface = font.render("Welcome to Crocodile Creek Tutorial!", True, config.WHITE)
                 #text_rect = text_surface.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.1))

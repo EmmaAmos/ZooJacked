@@ -85,9 +85,9 @@ class Player(pygame.sprite.Sprite):
         """Loads the main sprite sheet and parses individual animation frames."""
         
         if self.character_name == "The Boat Man":
-            sprite_sheet_path = "sprites/male_punch.png" # Assuming this is your test_punching.jpg
-            male_frame_width = 150  # Based on test_punching.jpg
-            male_frame_height = 150 # Based on test_punching.jpg
+            sprite_sheet_path = "sprites/male_punch.png"
+            male_frame_width = 100  # Based on test_punching.jpg
+            male_frame_height = 100 # Based on test_punching.jpg
             
             try:
                 self.sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
@@ -113,20 +113,11 @@ class Player(pygame.sprite.Sprite):
             self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(0 * male_frame_width, 1 * male_frame_height, male_frame_width, male_frame_height)))
             # Frame 4: Second row, 2nd image (punch follow through) - adjust as needed
             self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(1 * male_frame_width, 1 * male_frame_height, male_frame_width, male_frame_height)))
-            # Add more frames if your basic attack animation has them.
-            # Example if you want more frames from test_punching.jpg:
-            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(2 * male_frame_width, 1 * male_frame_height, male_frame_width, male_frame_height))) # Third frame in second row
-            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(3 * male_frame_width, 1 * male_frame_height, male_frame_width, male_frame_height))) # Fourth frame in second row
-            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(0 * male_frame_width, 2 * male_frame_height, male_frame_width, male_frame_height))) # First frame in third row
-            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(1 * male_frame_width, 2 * male_frame_height, male_frame_width, male_frame_height))) # Second frame in third row
-            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(2 * male_frame_width, 2 * male_frame_height, male_frame_width, male_frame_height))) # Third frame in third row
-            # self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(3 * male_frame_width, 2 * male_frame_height, male_frame_width, male_frame_height))) # Fourth frame in third row
+           
 
             self.animations["walking"] = []
-            # Assuming walking frames are in a specific row.
-            # If your walking animation is made of frames from test_punching.jpg, you'll need to define them here.
-            # For now, using idle frames as a placeholder if no dedicated walking frames are shown:
-            self.animations["walking"] = [self.animations["idle"][0]] # Use first idle frame if no distinct walk.
+            
+            self.animations["walking"] = [self.animations["idle"][0]]
 
             self.animations["jumping"] = []
             if self.animations["idle"]: 
@@ -136,14 +127,13 @@ class Player(pygame.sprite.Sprite):
 
 
         elif self.character_name == "The Log Lady":
-            sprite_sheet_path = "sprites/female_punch.bmp" # Assuming .bmp as discussed
-            female_frame_width = 150
-            female_frame_height = 150
+            sprite_sheet_path = "sprites/female_punch.bmp"
+            female_frame_width = 100
+            female_frame_height = 100
 
             try:
                 self.sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
             except pygame.error as e:
-                print(f"Error loading sprite sheet ({sprite_sheet_path}): {e}")
                 placeholder_img = self._create_placeholder(female_frame_width, female_frame_height)
                 self.animations["idle"] = [placeholder_img]
                 self.image = self.animations["idle"][0]
