@@ -30,7 +30,7 @@ class LevelSelectMap:
             },
             "Kangaroo Boogaloo": {
                 "level_num": 1,
-                "map_rect": pygame.Rect(390, 805, 80, 80),
+                "map_rect": pygame.Rect(150, 1300, 80, 80),
                 "tooltip": "Kangaroo Boogaloo",
                 "module": stages.stage2,
                 "button_color": config.GREEN
