@@ -1,10 +1,10 @@
-# stages/crocodileCreekTutorial.py
+# stages/BoatRideTutorial.py
 import pygame
 import config
 from fightingLogic.fightingLogic import Player
 from fightingLogic.winnerScreen import WinnerScreen
 
-class CrocodileCreekTutorial:
+class BoatRideTutorial:
     def __init__(self, screen, player_character_name, opponent_character_name):
         self.screen = screen
         self.player_character_name = player_character_name
@@ -26,7 +26,7 @@ class CrocodileCreekTutorial:
             print(f"Error loading background image (assests/Croc_Tutorial.jpg): {e}")
             self.background_image = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
             self.background_image.fill(config.GREEN)
-            print("Using a green placeholder for Crocodile Creek Tutorial background.")
+            print("Using a green placeholder for BoatRideTutorial background.")
 
     def _setup_characters(self):
         player_initial_x = config.SCREEN_WIDTH * 0.2
@@ -168,7 +168,7 @@ class CrocodileCreekTutorial:
 
         #Use these lines are diolog instructions
                 #font = pygame.font.Font(None, 60)
-                #text_surface = font.render("Welcome to Crocodile Creek Tutorial!", True, config.WHITE)
+                #text_surface = font.render("Welcome to BoatRideTutorial!", True, config.WHITE)
                 #text_rect = text_surface.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.1))
                 #self.screen.blit(text_surface, text_rect)
 
@@ -185,7 +185,7 @@ class CrocodileCreekTutorial:
                 # --- 7. Update Display and Control Frame Rate ---
                 pygame.display.flip()
                 clock.tick(60)
-        print("Exiting Crocodile Creek Tutorial.")
+        print("Exiting BoatRideTutorial.")
         return "level_select"
 
     def _draw_health_bar(self, screen, character, position, color):
@@ -229,8 +229,8 @@ if __name__ == "__main__":
     config = Config()
 
     test_screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
-    pygame.display.set_caption("Crocodile Creek Tutorial Test")
+    pygame.display.set_caption("BoatRideTutorial Test")
 
-    tutorial_stage = CrocodileCreekTutorial(test_screen, "The Boat Man", "The Log Lady")
+    tutorial_stage = BoatRideTutorial(test_screen, "The Boat Man", "The Log Lady")
     tutorial_stage.run()
     pygame.quit()

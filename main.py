@@ -4,7 +4,7 @@ import pygame
 # Initialize Pygame (main modules)
 pygame.init()
 pygame.font.init()
-
+import stages.BoatRideTutorial
 import config
 import screens
 import stages
@@ -72,8 +72,8 @@ while running:
                             print(f"Selected Level: {selected_level_info['level_num']} ({level_name})")
 
                             # --- Level Specific Logic ---
-                            # Check if the selected level is the Crocodile Creek Tutorial
-                            if selected_level_info.get("module") == stages.crocodileCreekTutorial:
+                            # Check if the selected level is the BoatRideTutorial
+                            if selected_level_info.get("module") == stages.BoatRideTutorial:
                                 # Determine the opponent based on the selected character
                                 opponent_character = None
                                 if selected_character == "The Boat Man":
@@ -82,9 +82,9 @@ while running:
                                     opponent_character = "The Boat Man"
 
                                 # Create and run the stage instance with character info
-                                # Ensure your stages.crocodileCreekTutorial.CrocodileCreekTutorial class
+                                # Ensure your stages.BoatRideTutorial.BoatRideTutorial class
                                 # accepts these arguments in its __init__ method.
-                                current_stage_instance = stages.crocodileCreekTutorial.CrocodileCreekTutorial(
+                                current_stage_instance = stages.BoatRideTutorial.BoatRideTutorial(
                                     screen, selected_character, opponent_character
                                 )
                                 # The .run() method should contain its own game loop and return when done.

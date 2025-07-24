@@ -7,7 +7,7 @@ import stages.stage1
 import stages.stage2
 import stages.stage3
 import stages.bounusStage
-import stages.crocodileCreekTutorial
+import stages.BoatRideTutorial
 
 class LevelSelectMap:
     def __init__(self):
@@ -19,20 +19,34 @@ class LevelSelectMap:
 
         # These coordinates are relative to the top-left of the AA_Map.png image.
         self.levels_data = {
-            "Crocodile Creek Tutorial": {
+            "BoatRideTutorial": {
                 "level_num": 0,
                 "map_rect": pygame.Rect(290, 805, 80, 80), # **ADJUST THESE COORDINATES for the purple dot**
-                "tooltip": "Crocodile Creek Adventure Tutorial",
-                "module": stages.crocodileCreekTutorial, # Pointing to the consolidated tutorial
+                "tooltip": "Boat Ride Tutorial",
+                "module": stages.BoatRideTutorial, # Pointing to the consolidated tutorial
                 "button_color": config.PURPLE # Added color for visual button
             },
             "Kangaroo Boogaloo": {
                 "level_num": 1,
-                "map_rect": pygame.Rect(150, 1300, 80, 80),
+                "map_rect": pygame.Rect(100, 1310, 50, 80),
                 "tooltip": "Kangaroo Boogaloo",
                 "module": stages.stage1,
                 "button_color": config.GREEN
-            }
+            },
+            "Birds of a Feather": {
+                "level_num": 2,
+                "map_rect": pygame.Rect(350, 1300, 80, 80),
+                "tooltip": "Birds of a Feather",
+                "module": stages.stage2,
+                "button_color": config.GREEN
+            },
+            "Dingo Ate My Name Tag": {
+                "level_num": 3,
+                "map_rect": pygame.Rect(550, 1300, 80, 80),
+                "tooltip": "Dingo Ate My Name Tag",
+                "module": stages.stage3,
+                "button_color": config.GREEN
+            },
         }
 
         self.map_display_width = config.SCREEN_WIDTH * 0.9
@@ -190,7 +204,7 @@ class LevelSelectMap:
             button_rect = data["scaled_rect"]
             button_color = data["button_color"]
 
-            if level_name == "Crocodile Creek Tutorial":
+            if level_name == "BoatRideTutorial":
                 continue
 
             if level_name == self.hovered_level_name:
@@ -358,8 +372,8 @@ class LevelSelectMap:
             button_rect = data["scaled_rect"]
             button_color = data["button_color"]
 
-            # Check if this is the "Crocodile Creek Tutorial" and if we should make it invisible
-            if level_name == "Crocodile Creek Tutorial":
+            # Check if this is the "BoatRideTutorial" and if we should make it invisible
+            if level_name == "BoatRideTutorial" or level_name == "Kangaroo Boogaloo":
                 continue # Skip drawing this level's button
 
             # Highlight if hovered
@@ -430,9 +444,9 @@ if __name__ == "__main__":
         DARK_GREY = (50, 50, 50) # Added for menu background
 
         # Dummy modules for testing
-        class CrocodileCreekTutorialModule:
+        class BoatRideTutorialModule:
             pass
-        CROCODILE_CREEK_TUTORIAL_MODULE = CrocodileCreekTutorialModule()
+        CROCODILE_CREEK_TUTORIAL_MODULE = BoatRideTutorialModule()
 
     config = Config() # Override config with the dummy for testing
 
