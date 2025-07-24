@@ -17,8 +17,6 @@ class LevelSelectMap:
         self.map_image = None
         self._load_map_image() # Initial load of map image
 
-        # Define levels with their names, numbers, and the RECTANGLE on the map image
-        # that the player will click to select them.
         # These coordinates are relative to the top-left of the AA_Map.png image.
         self.levels_data = {
             "Crocodile Creek Tutorial": {
@@ -32,7 +30,7 @@ class LevelSelectMap:
                 "level_num": 1,
                 "map_rect": pygame.Rect(150, 1300, 80, 80),
                 "tooltip": "Kangaroo Boogaloo",
-                "module": stages.stage2,
+                "module": stages.stage1,
                 "button_color": config.GREEN
             }
         }
