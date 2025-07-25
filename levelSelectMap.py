@@ -21,21 +21,21 @@ class LevelSelectMap:
         self.levels_data = {
             "BoatRideTutorial": {
                 "level_num": 0,
-                "map_rect": pygame.Rect(290, 805, 80, 80), # **ADJUST THESE COORDINATES for the purple dot**
+                "map_rect": pygame.Rect(290, 805, 80, 80), #has been placed correctly
                 "tooltip": "Boat Ride Tutorial",
-                "module": stages.BoatRideTutorial, # Pointing to the consolidated tutorial
-                "button_color": config.PURPLE # Added color for visual button
+                "module": stages.BoatRideTutorial, 
+                "button_color": config.GREEN 
             },
             "Kangaroo Boogaloo": {
                 "level_num": 1,
-                "map_rect": pygame.Rect(100, 1310, 50, 80),
+                "map_rect": pygame.Rect(100, 1310, 50, 80), #has been placed correctly
                 "tooltip": "Kangaroo Boogaloo",
                 "module": stages.stage1,
                 "button_color": config.GREEN
             },
             "Birds of a Feather": {
                 "level_num": 2,
-                "map_rect": pygame.Rect(350, 1300, 80, 80),
+                "map_rect": pygame.Rect(350, 1100, 80, 80),
                 "tooltip": "Birds of a Feather",
                 "module": stages.stage2,
                 "button_color": config.GREEN
@@ -45,6 +45,13 @@ class LevelSelectMap:
                 "map_rect": pygame.Rect(550, 1300, 80, 80),
                 "tooltip": "Dingo Ate My Name Tag",
                 "module": stages.stage3,
+                "button_color": config.GREEN
+            },
+            "Bonus Stage": {
+                "level_num": 4,
+                "map_rect": pygame.Rect(750, 1300, 80, 80),
+                "tooltip": "The Aquarium",
+                "module": stages.bounusStage,
                 "button_color": config.GREEN
             },
         }
