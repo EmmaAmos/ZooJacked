@@ -8,7 +8,8 @@ import stages.BoatRideTutorial
 import config
 import screens
 import stages
-import levelSelectMap 
+import levelSelectMap
+import stages.stage1 # <--- ADD THIS IMPORT for Stage1
 
 # --- Game Initialization ---
 
@@ -82,8 +83,6 @@ while running:
                                     opponent_character = "The Boat Man"
 
                                 # Create and run the stage instance with character info
-                                # Ensure your stages.BoatRideTutorial.BoatRideTutorial class
-                                # accepts these arguments in its __init__ method.
                                 current_stage_instance = stages.BoatRideTutorial.BoatRideTutorial(
                                     screen, selected_character, opponent_character
                                 )
@@ -93,11 +92,41 @@ while running:
                                 # After the stage finishes, return to level select
                                 current_screen = "level_select"
                                 print(f"Exiting {level_name}. Returning to level select.")
+
+                            # --- ADD THIS NEW ELIF BLOCK FOR KANGAROO BOOGALOO (STAGE1) ---
+                            elif selected_level_info.get("module") == stages.stage1:
+                                print(f"DEBUG: Attempting to load Stage1 for {level_name}")
+                                # Determine the opponent for Stage1 (Kangaroo Boogaloo)
+                                # Assuming The Log Lady is your character, the opponent is "Kangaroo"
+                                # You might need to adjust opponent character based on the selected_character or level_name
+                                opponent_character_stage1 = "Kangaroo" # Example opponent for Stage1
+
+                                if not selected_character:
+                                    # Fallback or prompt if character not selected before level
+                                    selected_character = "The Log Lady" # Default if not chosen
+                                    print("WARNING: Player character not selected, defaulting to The Log Lady.")
+
+                                try:
+                                    current_stage_instance = stages.stage1.Stage1(
+                                        screen, selected_character, opponent_character_stage1
+                                    )
+                                    # The .run() method contains the stage's game loop
+                                    next_state_from_stage = current_stage_instance.run()
+                                    current_screen = next_state_from_stage # Stage1.run() should return "level_select" or "quit"
+                                    print(f"Exiting {level_name}. Returning to {current_screen}.")
+                                except AttributeError as e:
+                                    print(f"ERROR: Failed to load stages.stage1.Stage1: {e}")
+                                    current_screen = "level_select" # Go back to select on error
+                                except Exception as e:
+                                    print(f"An unexpected error occurred during Stage1: {e}")
+                                    current_screen = "level_select" # Go back to select on error
+
+                            # --- END NEW ELIF BLOCK ---
+
                             else:
-                                # For other stages not yet implemented with specific character logic,
-                                # transition to a generic game_play placeholder or more advanced stage handling.
+                                # This 'else' block will now only catch truly unimplemented stages
                                 current_screen = "game_play" # Transition to game_play placeholder
-                                print(f"Starting generic game_play for {level_name}.")
+                                print(f"Starting generic game_play for {level_name}. (Truly not yet implemented)")
                         else:
                             print(f"Error: Could not find info for level '{level_name}'")
 
@@ -119,7 +148,7 @@ while running:
         level_select_map.draw(screen) # Draw the level map using the single instance
     elif current_screen == "game_play": # This block now only runs if a non-tutorial level is selected
         # This section is your placeholder for other stages.
-        # You'll expand this later to dynamically load and run other stages.
+        # It should ONLY show for levels that genuinely don't have a dedicated stage class yet.
         screen.fill(config.WHITE)
         font = pygame.font.Font(None, 50)
         game_text = font.render(f"Playing as {selected_character} in {level_name} (Stage Not Fully Implemented)!", True, config.BLACK)

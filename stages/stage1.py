@@ -22,10 +22,10 @@ class Stage1: # Renamed the class from BoatRideTutorial to Stage1
         try:
             # You might want to change this background image from Croc_Tutorial.jpg
             # to something more appropriate for Stage1 if it's not a tutorial.
-            self.background_image = pygame.image.load("assests/Croc_Tutorial.jpg").convert()
+            self.background_image = pygame.image.load("assests/Stage_1.png").convert()
             self.background_image = pygame.transform.scale(self.background_image, (config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
         except pygame.error as e:
-            print(f"Error loading background image (assests/Croc_Tutorial.jpg): {e}")
+            print(f"Error loading background image (assests/Stage_1.png): {e}")
             self.background_image = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
             self.background_image.fill(config.GREEN)
             print("Using a green placeholder for Stage1 background.") # Updated message

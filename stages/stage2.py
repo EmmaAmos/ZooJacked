@@ -15,11 +15,11 @@ class Stage1:
         """Loads the background image for Stage 1."""
         try:
             # CORRECTED PATH based on your file structure
-            self.background_image = pygame.image.load("assests/Stage_1.webp").convert()
+            self.background_image = pygame.image.load("assests/Stage_2.png").convert()
             # Scale the image to fit the screen dimensions
             self.background_image = pygame.transform.scale(self.background_image, (config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
         except pygame.error as e:
-            print(f"Error loading background image (assests/Stage_1.webp): {e}")
+            print(f"Error loading background image (assests/Stage_2.png): {e}")
             self.background_image = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
             self.background_image.fill(config.BLUE) # Use a placeholder color if image fails
             print("Using a blue placeholder for Stage 1 background.")

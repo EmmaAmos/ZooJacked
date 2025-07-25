@@ -379,9 +379,11 @@ class LevelSelectMap:
             button_rect = data["scaled_rect"]
             button_color = data["button_color"]
 
-            # Check if this is the "BoatRideTutorial" and if we should make it invisible
-            if level_name == "BoatRideTutorial" or level_name == "KangarooBoogaloo" or level_name == "BirdsOfAFeather" or level_name == "DingoAteMyNameTag" or level_name == "BonusStage":
+            # Make buttons invisible
+            if level_name == "BoatRideTutorial" or level_name == "BirdsOfAFeather" or level_name == "DingoAteMyNameTag" or level_name == "BonusStage":
                 continue # Skip drawing this level's button
+
+#or level_name == "KangarooBoogaloo"
 
             # Highlight if hovered
             if level_name == self.hovered_level_name:
