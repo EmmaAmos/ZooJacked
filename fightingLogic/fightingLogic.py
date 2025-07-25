@@ -20,7 +20,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(midbottom=(initial_x, initial_y))
 
         # --- CHARACTER HITBOX (for taking damage/collisions) ---
-        self.hitbox_offset_x = 20
+        self.hitbox_offset_x = 120
         self.hitbox_offset_y = 10
         self.hitbox_width_reduction = 0 # Set to 0 to make it same width as sprite
         self.hitbox_height_reduction = 0 # Set to 0 to make it same height as sprite

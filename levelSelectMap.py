@@ -26,31 +26,31 @@ class LevelSelectMap:
                 "module": stages.BoatRideTutorial, 
                 "button_color": config.GREEN 
             },
-            "Kangaroo Boogaloo": {
+            "KangarooBoogaloo": {
                 "level_num": 1,
                 "map_rect": pygame.Rect(100, 1310, 50, 80), #has been placed correctly
                 "tooltip": "Kangaroo Boogaloo",
                 "module": stages.stage1,
                 "button_color": config.GREEN
             },
-            "Birds of a Feather": {
+            "BirdsOfAFeather": {
                 "level_num": 2,
-                "map_rect": pygame.Rect(350, 1100, 80, 80),
+                "map_rect": pygame.Rect(350, 1100, 80, 80), #has been placed correctly
                 "tooltip": "Birds of a Feather",
                 "module": stages.stage2,
                 "button_color": config.GREEN
             },
-            "Dingo Ate My Name Tag": {
+            "DingoAteMyNameTag": {
                 "level_num": 3,
-                "map_rect": pygame.Rect(550, 1300, 80, 80),
+                "map_rect": pygame.Rect(650, 1000, 90, 80), #has been placed correctly
                 "tooltip": "Dingo Ate My Name Tag",
                 "module": stages.stage3,
                 "button_color": config.GREEN
             },
-            "Bonus Stage": {
+            "BonusStage": {
                 "level_num": 4,
-                "map_rect": pygame.Rect(750, 1300, 80, 80),
-                "tooltip": "The Aquarium",
+                "map_rect": pygame.Rect(600, 500, 80, 80),
+                "tooltip": "The Sting",
                 "module": stages.bounusStage,
                 "button_color": config.GREEN
             },
@@ -380,7 +380,7 @@ class LevelSelectMap:
             button_color = data["button_color"]
 
             # Check if this is the "BoatRideTutorial" and if we should make it invisible
-            if level_name == "BoatRideTutorial" or level_name == "Kangaroo Boogaloo":
+            if level_name == "BoatRideTutorial" or level_name == "KangarooBoogaloo" or level_name == "BirdsOfAFeather" or level_name == "DingoAteMyNameTag" or level_name == "BonusStage":
                 continue # Skip drawing this level's button
 
             # Highlight if hovered
