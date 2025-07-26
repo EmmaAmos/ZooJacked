@@ -1,4 +1,4 @@
-# stages/Stage1.py  (File should be named Stage1.py)
+# stages/Stage1.py
 import pygame
 import config
 from fightingLogic.fightingLogic import Player
