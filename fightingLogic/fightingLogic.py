@@ -111,68 +111,86 @@ class Player(pygame.sprite.Sprite):
 
     def _load_all_sprites(self):
         """Loads the main sprite sheet and parses individual animation frames, with chicken fallback."""
-        
+
         sprite_sheet_path = None
-        # Define default frame_width/height at the start of the function for general use
-        current_frame_width = 100 
+        current_frame_width = 100
         current_frame_height = 100
+
+        # Define offsets specific to each character type
+        base_x_offset = 0  # Default or placeholder
+        base_y_offset = 0  # Default or placeholder
 
         if self.character_name == "The Boat Man":
             sprite_sheet_path = "sprites/male_punch.png"
-            # No need to redefine male_frame_width/height here, current_frame_width/height will be used.
-            
-        elif self.character_name == "The Log Lady":
-            sprite_sheet_path = "sprites/female_punch.bmp"
-            # No need to redefine female_frame_width/height here, current_frame_width/height will be used.
+            # Define offsets for The Boat Man's sprite sheet
+            # You'll need to inspect male_punch.png to find these actual values.
+            # Using placeholders for now:
+            base_x_offset = 5 # Example, adjust based on male_punch.png
+            base_y_offset = 10 # Example, adjust based on male_punch.png
 
-        # Try to load the specific character's sprite sheet
-        if sprite_sheet_path:
             try:
                 self.sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
                 print(f"Loaded sprite sheet for {self.character_name}: {sprite_sheet_path}")
 
                 # --- PARSE MALE SPRITE SHEET ---
-                if self.character_name == "The Boat Man":
-                    self.animations["idle"] = []
-                    self.animations["idle"].append(self.sprite_sheet.subsurface(pygame.Rect(1 * current_frame_width, 0, current_frame_width, current_frame_height)))
-                    
-                    self.animations["basic_attack"] = []
-                    self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(2 * current_frame_width, 0, current_frame_width, current_frame_height)))
-                    self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(3 * current_frame_width, 0, current_frame_width, current_frame_height)))
-                    self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(0 * current_frame_width, 1 * current_frame_height, current_frame_width, current_frame_height)))
-                    self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(1 * current_frame_width, 1 * current_frame_height, current_frame_width, current_frame_height)))
-                    
-                    self.animations["walking"] = [self.animations["idle"][0]]
-                    self.animations["jumping"] = [self.animations["idle"][0]]
+                self.animations["idle"] = []
+                self.animations["idle"].append(self.sprite_sheet.subsurface(pygame.Rect(base_x_offset + 0 * current_frame_width, base_y_offset, current_frame_width, current_frame_height)))
+
+                self.animations["basic_attack"] = []
+                self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(base_x_offset + 0 * current_frame_width, base_y_offset, current_frame_width, current_frame_height)))
+                self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(base_x_offset + 1 * current_frame_width, base_y_offset, current_frame_width, current_frame_height)))
+                self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(base_x_offset + 2 * current_frame_width, base_y_offset, current_frame_width, current_frame_height)))
+                self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(base_x_offset + 3 * current_frame_width, base_y_offset, current_frame_width, current_frame_height)))
+
+                self.animations["walking"] = [self.animations["idle"][0]]
+                self.animations["jumping"] = [self.animations["idle"][0]]
+
+            except pygame.error as e:
+                print(f"Error loading sprite sheet for {self.character_name}: {e}")
+                self._load_chicken_fallback_sprites(current_frame_width, current_frame_height)
+
+
+        elif self.character_name == "The Log Lady":
+            sprite_sheet_path = "sprites/test_punching_female.png"
+            # Offsets for The Log Lady are correctly defined here
+            base_x_offset = 5
+            base_y_offset = 10
+
+            try:
+                self.sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
+                print(f"Loaded sprite sheet for {self.character_name}: {sprite_sheet_path}")
 
                 # --- PARSE FEMALE SPRITE SHEET ---
-                elif self.character_name == "The Log Lady":
-                    self.animations["idle"] = []
-                    self.animations["idle"].append(self.sprite_sheet.subsurface(pygame.Rect(0 * current_frame_width, 0, current_frame_width, current_frame_height)))
+                self.animations["idle"] = []
+                self.animations["idle"].append(self.sprite_sheet.subsurface(pygame.Rect(base_x_offset + 0 * current_frame_width, base_y_offset, current_frame_width, current_frame_height)))
 
-                    self.animations["basic_attack"] = []
-                    self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(0 * current_frame_width, 0, current_frame_width, current_frame_height)))
-                    self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(1 * current_frame_width, 0, current_frame_width, current_frame_height)))
-                    self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(2 * current_frame_width, 0, current_frame_width, current_frame_height))) # Corrected 'female_frame_height' to 'current_frame_height'
+                self.animations["basic_attack"] = []
+                self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(base_x_offset + 0 * current_frame_width, base_y_offset, current_frame_width, current_frame_height)))
+                self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(base_x_offset + 1 * current_frame_width, base_y_offset, current_frame_width, current_frame_height)))
+                self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(base_x_offset + 2 * current_frame_width, base_y_offset, current_frame_width, current_frame_height)))
+                self.animations["basic_attack"].append(self.sprite_sheet.subsurface(pygame.Rect(base_x_offset + 3 * current_frame_width, base_y_offset, current_frame_width, current_frame_height)))
 
-                    self.animations["walking"] = [self.animations["idle"][0]]
-                    self.animations["jumping"] = [self.animations["idle"][0]]
-                
-                # After attempting to load and parse, ensure 'idle' animation is set.
-                # If not, it means parsing failed or the character name was not matched,
-                # so fall back to chicken.
-                if not self.animations.get("idle") or not self.animations["idle"]:
-                    print(f"WARNING: 'idle' animation not populated for {self.character_name}. Falling back to chicken.")
-                    self._load_chicken_fallback_sprites(current_frame_width, current_frame_height) # Explicitly load chicken
-                
-            except pygame.error as e: # This 'except' block is now correctly placed to catch errors from the 'try' above it
-                print(f"Error loading sprite sheet for {self.character_name} from {sprite_sheet_path}: {e}")
-                print(f"Falling back to defualt_chicken for {self.character_name}.")
-                self._load_chicken_fallback_sprites(current_frame_width, current_frame_height) # Explicitly load chicken
-        else:
-            # If character_name is unknown or no specific path, use chicken directly
-            print(f"No specific sprite sheet path defined for '{self.character_name}'. Using defualt_chicken.")
+                self.animations["walking"] = [self.animations["idle"][0]]
+                self.animations["jumping"] = [self.animations["idle"][0]]
+
+            except pygame.error as e:
+                print(f"Error loading sprite sheet for {self.character_name}: {e}")
+                self._load_chicken_fallback_sprites(current_frame_width, current_frame_height)
+
+        else: # This handles 'Kangaroo' or any other character not explicitly listed
+            print(f"No specific sprite sheet path defined for '{self.character_name}'. Using default chicken.")
             self._load_chicken_fallback_sprites(current_frame_width, current_frame_height)
+
+        # Final check to ensure self.image is set, even if all specific loading failed.
+        # This part assumes self.image will be set either by a specific character
+        # loading or by _load_chicken_fallback_sprites.
+        # It's good practice to have a final fallback for self.image and self.rect.
+        if not hasattr(self, 'image') or self.image is None:
+            print(f"CRITICAL ERROR: self.image not set for {self.character_name}. Using emergency placeholder.")
+            self.image = pygame.Surface((current_frame_width, current_frame_height))
+            self.image.fill((255, 0, 255)) # Magenta for error
+        if not hasattr(self, 'rect') or self.rect is None:
+            self.rect = self.image.get_rect()
 
     def _load_chicken_fallback_sprites(self, width, height):
         """Helper to load and set up animations for the defualt_chicken."""
