@@ -39,3 +39,11 @@ CHAR_SPACING = 50 # Space between characters
 PLAYER_SPEED = 5        # How many pixels the player moves per frame horizontally
 GRAVITY = 0.8           # Gravity strength, pulls objects down
 GROUND_HEIGHT = 50      # Distance from bottom of screen to the "ground" level
+
+# UI Bar and Text Positions
+HEALTH_BAR_Y_OFFSET = 50  # Adjust this value to move everything down more
+NAME_Y_OFFSET = 20        # Adjust this value for the name relative to the bar
+
+# UI Text Properties
+PLAYER_NAME_FONT_SIZE = 36 # Larger size
+WHITE = (255, 255, 255)   # Define white color if not already present
