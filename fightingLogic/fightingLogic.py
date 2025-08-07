@@ -464,39 +464,21 @@ class Player(pygame.sprite.Sprite):
             return True
         return False
 
-def handle_ai(self, player_rect, player_is_attacking):
-    if self.is_player_controlled:
-        return
+    def handle_ai(self, player_rect, player_is_attacking):
+        if self.is_player_controlled:
+            return
 
-    # This single check at the top is very good and sufficient.
-    if self.is_attacking or self.attack_cooldown > 0: 
-        return
+        distance_x = player_rect.centerx - self.rect.centerx
+        abs_distance_x = abs(distance_x)
+        close_range = 100
 
-    distance_x = player_rect.centerx - self.rect.centerx
-    abs_distance_x = abs(distance_x)
-    close_range = 100
-
-    # The AI's decision to attack is now based on the main cooldown.
-    # No need to add another cooldown check here because of the line above.
-    # The logic is solid.
-    if abs_distance_x < close_range and not player_is_attacking:
-        # Check for super attack first (highest priority)
-        if self.attack_hit_count >= self.SUPER_ATTACK_THRESHOLD and abs_distance_x < close_range * 2:
-            self.vel_x = 0
-            print(f"DEBUG: {self.character_name} AI decided to super_attack!")
-            return "super_attack"
-        # Check for mid attack next
-        elif self.attack_hit_count >= self.MID_ATTACK_THRESHOLD and abs_distance_x < close_range * 1.5:
-            self.vel_x = 0
-            print(f"DEBUG: {self.character_name} AI decided to mid_attack!")
-            return "mid_attack"
-        # Finally, check for basic attack
-        elif (distance_x > 0 and self.rect.right < player_rect.left + 20) or \
-             (distance_x < 0 and self.rect.left > player_rect.right - 20) or \
-             abs_distance_x < 50:
-            self.vel_x = 0
-            print(f"DEBUG: {self.character_name} AI decided to basic_attack! (Player not attacking)")
-            return "basic_attack"
+        if abs_distance_x < close_range and not player_is_attacking and self.last_hit_by_basic_attack == 0:
+            if (distance_x > 0 and self.rect.right < player_rect.left + 20) or \
+            (distance_x < 0 and self.rect.left > player_rect.right - 20) or \
+            abs_distance_x < 50:
+                self.vel_x = 0
+                print(f"DEBUG: {self.character_name} AI decided to basic_attack! (Player not attacking)")
+                return "basic_attack"
 
         if self.attack_hit_count >= self.MID_ATTACK_THRESHOLD and abs_distance_x < close_range * 1.5:
             self.vel_x = 0
@@ -520,6 +502,7 @@ def handle_ai(self, player_rect, player_is_attacking):
             self.jump()
 
         return None
+
 
 
 
