@@ -3,31 +3,47 @@ import pygame
 import config
 import random
 
+
+class Spritesheet:
+    def __init__(self, filename):
+        self.filename = filename
+        try:
+            self.sprite_sheet = pygame.image.load(filename).convert_alpha()
+        except pygame.error as e:
+            print(f"Error loading spritesheet file {filename}: {e}")
+            self.sprite_sheet = None
+
+    def get_sprite(self, x, y, w, h):
+        if self.sprite_sheet is None:
+            return None # Or return a placeholder if you prefer
+
+        sprite = pygame.Surface((w, h), pygame.SRCALPHA)
+        sprite.blit(self.sprite_sheet, (0, 0), (x, y, w, h))
+        return sprite
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, character_name, initial_x, initial_y, is_player_controlled=True):
         super().__init__()
         self.character_name = character_name
         self.is_player_controlled = is_player_controlled
         
-        self.sprite_sheet = None
+        self.spritesheet_loader = None
+        
         self.animations = {}
         self.current_frame = 0
         self.animation_speed = 5
         self.animation_timer = 0
         
-        # Load character-specific sprites or fall back to chicken
         self._load_all_sprites()
 
-        # Ensure "idle" animation exists. If not, use the defualt_chicken frame.
         if not self.animations.get("idle") or not self.animations["idle"]:
             print(f"WARNING: No 'idle' animation found for {self.character_name} after _load_all_sprites. Using defualt_chicken.")
-            # Use the default frame size for chicken if no specific size was set by _load_all_sprites
             self.animations["idle"] = [self._get_defualt_chicken_frame(100, 100)] 
             
         self.image = self.animations["idle"][0]
         self.rect = self.image.get_rect(midbottom=(initial_x, initial_y))
 
-        # --- CHARACTER HITBOX (for taking damage/collisions) ---
+
         self.hitbox_offset_x = 120
         self.hitbox_offset_y = 10
         self.hitbox_width_reduction = 40 
@@ -39,16 +55,16 @@ class Player(pygame.sprite.Sprite):
             self.rect.width - self.hitbox_width_reduction,
             self.rect.height - self.hitbox_height_reduction
         )
+
         # --- END CHARACTER HITBOX ADDITIONS ---
 
-        # --- ATTACK HITBOX PROPERTIES ---
-        self.attack_hitbox = None # This will hold the Rect for the attack hitbox
-        self.attack_hitbox_width = 70  # Width of the basic punch hitbox
-        self.attack_hitbox_height = 40 # Height of the basic punch hitbox
-        # Offsets for positioning the attack hitbox relative to the player's rect
-        self.attack_hitbox_offset_x_right = 50 # X-offset when facing right (from self.rect.right)
-        self.attack_hitbox_offset_x_left = -20 # X-offset when facing left (from self.rect.left)
-        self.attack_hitbox_offset_y = 20 # Y-offset (from self.rect.y)
+   #--- ATTACK HITBOX PROPERTIES ---
+        self.attack_hitbox = None
+        self.attack_hitbox_width = 70
+        self.attack_hitbox_height = 40
+        self.attack_hitbox_offset_x_right = 50
+        self.attack_hitbox_offset_x_left = -20
+        self.attack_hitbox_offset_y = 20
         # --- END ATTACK HITBOX PROPERTIES ---
 
         # Movement variables
@@ -57,6 +73,16 @@ class Player(pygame.sprite.Sprite):
         self.on_ground = True
         self.jump_strength = -20
         self.facing_right = True # Initial direction
+
+        # Animation states
+        self.state = "idle"
+
+        # Movement variables
+        self.vel_x = 0
+        self.vel_y = 0
+        self.on_ground = True
+        self.jump_strength = -20
+        self.facing_right = True
 
         # Animation states
         self.state = "idle"
@@ -74,43 +100,107 @@ class Player(pygame.sprite.Sprite):
         self.SUPER_ATTACK_THRESHOLD = 10
 
         self.last_hit_by_basic_attack = 0
-        self.BASIC_ATTACK_COOLDOWN_TIME = 2 # This is very short, consider increasing
+        self.BASIC_ATTACK_COOLDOWN_TIME = 2
 
         self.has_dealt_hit_this_attack = False
 
-    def _get_defualt_chicken_frame(self, width=100, height=100): # Added default width/height
-        """
-        Loads the defualt_chicken sprite sheet and returns its first idle frame.
-        This is the preferred graphical fallback for all missing sprites.
-        """
-        default_sprite_sheet_path = "sprites/defualt_chicken.png" 
-
-        try:
-            default_sheet = pygame.image.load(default_sprite_sheet_path).convert_alpha()
-            
-            chicken_frame_width = 100
-            chicken_frame_height = 100
-            
-            return default_sheet.subsurface(pygame.Rect(0, 0, chicken_frame_width, chicken_frame_height))
-        except pygame.error as e:
-            print(f"CRITICAL ERROR: Could not load defualt_chicken sprite sheet ({default_sprite_sheet_path}): {e}")
+    def _get_defualt_chicken_frame(self, width=100, height=100):
+        default_sprite_sheet_path = "sprites/defualt_chicken.png"
+        
+        default_spritesheet = Spritesheet(default_sprite_sheet_path)
+        if default_spritesheet.sprite_sheet is None:
             placeholder_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-            placeholder_surface.fill((255, 0, 255, 128)) # Semi-transparent magenta for visibility
+            placeholder_surface.fill((255, 0, 255, 128))
             font = pygame.font.Font(None, 20)
             text = font.render("NO CHICKEN!", True, config.WHITE)
             text_rect = text.get_rect(center=(width // 2, height // 2))
             placeholder_surface.blit(text, text_rect)
             return placeholder_surface
+        
+        chicken_frame = default_spritesheet.get_sprite(0, 0, width, height)
+        if chicken_frame:
+            return chicken_frame
+        else:
+            placeholder_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+            placeholder_surface.fill((255, 0, 255, 128))
+            return placeholder_surface
 
-    def _create_placeholder(self, width=100, height=100): # Now consistently returns chicken frame
-        """
-        Helper function to create a placeholder surface for missing sprites.
-        This now consistently returns the defualt_chicken frame.
-        """
+    def _create_placeholder(self, width=100, height=100):
         return self._get_defualt_chicken_frame(width, height)
 
     def _load_all_sprites(self):
         """Loads the main sprite sheet and parses individual animation frames, with chicken fallback."""
+        current_frame_width = 100
+        current_frame_height = 100
+        sprite_sheet_path = None
+        base_x_offset = 0
+        base_y_offset = 0
+
+        if self.character_name == "The Boat Man":
+            sprite_sheet_path = "sprites/male_punch.png"
+            base_x_offset = 5
+            base_y_offset = 10
+        elif self.character_name == "The Log Lady":
+            sprite_sheet_path = "sprites/test_punching_female.png"
+            base_x_offset = 5
+            base_y_offset = 10
+        else:
+            print(f"No specific sprite sheet path defined for '{self.character_name}'. Using default chicken.")
+            self._load_chicken_fallback_sprites(current_frame_width, current_frame_height)
+            return # Exit the function here to prevent further execution
+
+        # Only attempt to load the spritesheet if a path was defined
+        if sprite_sheet_path:
+            self.spritesheet_loader = Spritesheet(sprite_sheet_path)
+            if self.spritesheet_loader.sprite_sheet:
+                print(f"Loaded sprite sheet for {self.character_name}: {sprite_sheet_path}")
+                
+                # --- PARSE SPRITE SHEET USING get_sprite ---
+                self.animations["idle"] = []
+                self.animations["idle"].append(self.spritesheet_loader.get_sprite(base_x_offset + 0 * current_frame_width, base_y_offset, current_frame_width, current_frame_height))
+                
+                self.animations["basic_attack"] = []
+                self.animations["basic_attack"].append(self.spritesheet_loader.get_sprite(base_x_offset + 0 * current_frame_width, base_y_offset, current_frame_width, current_frame_height))
+                self.animations["basic_attack"].append(self.spritesheet_loader.get_sprite(base_x_offset + 1 * current_frame_width, base_y_offset, current_frame_width, current_frame_height))
+                self.animations["basic_attack"].append(self.spritesheet_loader.get_sprite(base_x_offset + 2 * current_frame_width, base_y_offset, current_frame_width, current_frame_height))
+                self.animations["basic_attack"].append(self.spritesheet_loader.get_sprite(base_x_offset + 3 * current_frame_width, base_y_offset, current_frame_width, current_frame_height))
+                
+                self.animations["walking"] = [self.animations["idle"][0]]
+                self.animations["jumping"] = [self.animations["idle"][0]]
+            else:
+                # Fallback if the specific character sheet fails to load
+                print(f"Error loading sprite sheet for {self.character_name}, using chicken fallback.")
+                self._load_chicken_fallback_sprites(current_frame_width, current_frame_height)
+
+        elif self.character_name == "The Log Lady":
+            sprite_sheet_path = "sprites/test_punching_female.png"
+            base_x_offset = 5
+            base_y_offset = 10
+
+            # --- USE THE SPRITESHEET CLASS HERE ---
+            self.spritesheet_loader = Spritesheet(sprite_sheet_path)
+            if self.spritesheet_loader.sprite_sheet:
+                print(f"Loaded sprite sheet for {self.character_name}: {sprite_sheet_path}")
+
+                # --- PARSE FEMALE SPRITE SHEET USING get_sprite ---
+                self.animations["idle"] = []
+                self.animations["idle"].append(self.spritesheet_loader.get_sprite(base_x_offset + 0 * current_frame_width, base_y_offset, current_frame_width, current_frame_height))
+                
+                self.animations["basic_attack"] = []
+                self.animations["basic_attack"].append(self.spritesheet_loader.get_sprite(base_x_offset + 0 * current_frame_width, base_y_offset, current_frame_width, current_frame_height))
+                self.animations["basic_attack"].append(self.spritesheet_loader.get_sprite(base_x_offset + 1 * current_frame_width, base_y_offset, current_frame_width, current_frame_height))
+                self.animations["basic_attack"].append(self.spritesheet_loader.get_sprite(base_x_offset + 2 * current_frame_width, base_y_offset, current_frame_width, current_frame_height))
+                self.animations["basic_attack"].append(self.spritesheet_loader.get_sprite(base_x_offset + 3 * current_frame_width, base_y_offset, current_frame_width, current_frame_height))
+                
+                self.animations["walking"] = [self.animations["idle"][0]]
+                self.animations["jumping"] = [self.animations["idle"][0]]
+            else:
+                print(f"Error loading sprite sheet for {self.character_name}, using chicken fallback.")
+                self._load_chicken_fallback_sprites(current_frame_width, current_frame_height)
+
+        else: # This handles 'Kangaroo' or any other character not explicitly listed
+            print(f"No specific sprite sheet path defined for '{self.character_name}'. Using default chicken.")
+            self._load_chicken_fallback_sprites(current_frame_width, current_frame_height)
 
         sprite_sheet_path = None
         current_frame_width = 100
@@ -374,24 +464,39 @@ class Player(pygame.sprite.Sprite):
             return True
         return False
 
-    def handle_ai(self, player_rect, player_is_attacking):
-        if self.is_player_controlled:
-            return
+def handle_ai(self, player_rect, player_is_attacking):
+    if self.is_player_controlled:
+        return
 
-        if self.is_attacking or self.attack_cooldown > 0:
-            return
+    # This single check at the top is very good and sufficient.
+    if self.is_attacking or self.attack_cooldown > 0: 
+        return
 
-        distance_x = player_rect.centerx - self.rect.centerx
-        abs_distance_x = abs(distance_x)
-        close_range = 100
+    distance_x = player_rect.centerx - self.rect.centerx
+    abs_distance_x = abs(distance_x)
+    close_range = 100
 
-        if abs_distance_x < close_range and not player_is_attacking and self.last_hit_by_basic_attack == 0:
-            if (distance_x > 0 and self.rect.right < player_rect.left + 20) or \
-               (distance_x < 0 and self.rect.left > player_rect.right - 20) or \
-               abs_distance_x < 50:
-                self.vel_x = 0
-                print(f"DEBUG: {self.character_name} AI decided to basic_attack! (Player not attacking)")
-                return "basic_attack"
+    # The AI's decision to attack is now based on the main cooldown.
+    # No need to add another cooldown check here because of the line above.
+    # The logic is solid.
+    if abs_distance_x < close_range and not player_is_attacking:
+        # Check for super attack first (highest priority)
+        if self.attack_hit_count >= self.SUPER_ATTACK_THRESHOLD and abs_distance_x < close_range * 2:
+            self.vel_x = 0
+            print(f"DEBUG: {self.character_name} AI decided to super_attack!")
+            return "super_attack"
+        # Check for mid attack next
+        elif self.attack_hit_count >= self.MID_ATTACK_THRESHOLD and abs_distance_x < close_range * 1.5:
+            self.vel_x = 0
+            print(f"DEBUG: {self.character_name} AI decided to mid_attack!")
+            return "mid_attack"
+        # Finally, check for basic attack
+        elif (distance_x > 0 and self.rect.right < player_rect.left + 20) or \
+             (distance_x < 0 and self.rect.left > player_rect.right - 20) or \
+             abs_distance_x < 50:
+            self.vel_x = 0
+            print(f"DEBUG: {self.character_name} AI decided to basic_attack! (Player not attacking)")
+            return "basic_attack"
 
         if self.attack_hit_count >= self.MID_ATTACK_THRESHOLD and abs_distance_x < close_range * 1.5:
             self.vel_x = 0
