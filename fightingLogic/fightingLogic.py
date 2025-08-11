@@ -7,16 +7,9 @@ import random
 class Spritesheet:
     def __init__(self, filename):
         self.filename = filename
-        try:
-            self.sprite_sheet = pygame.image.load(filename).convert_alpha()
-        except pygame.error as e:
-            print(f"Error loading spritesheet file {filename}: {e}")
-            self.sprite_sheet = None
+        self.sprite_sheet = pygame.image.load(filename).convert_alpha()
 
     def get_sprite(self, x, y, w, h):
-        if self.sprite_sheet is None:
-            return None # Or return a placeholder if you prefer
-
         sprite = pygame.Surface((w, h), pygame.SRCALPHA)
         sprite.blit(self.sprite_sheet, (0, 0), (x, y, w, h))
         return sprite
