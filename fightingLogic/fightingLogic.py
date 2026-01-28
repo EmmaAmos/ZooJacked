@@ -88,7 +88,7 @@ class Player(pygame.sprite.Sprite):
         if self.character_name == "The Boat Man":
             path = "sprites/male_punch.png"
         elif self.character_name == "The Log Lady":
-            path = "sprites/test_punching_female.png"
+            path = "sprites/female_punch.bmp"
 
         sheet = Spritesheet(path) if path else None
 
