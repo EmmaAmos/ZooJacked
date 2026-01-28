@@ -1,7 +1,8 @@
 # stages/BoatRideTutorial.py
 import pygame
 import config
-from fightingLogic.fightingLogic import Player
+import random
+from fightingLogic.fightingLogic import Player, draw_controls_overlay 
 from fightingLogic.winnerScreen import WinnerScreen
 
 class BoatRideTutorial:
@@ -20,13 +21,13 @@ class BoatRideTutorial:
 
     def _load_background_image(self):
         try:
+            # Matching your folder name: "assests"
             self.background_image = pygame.image.load("assests/Croc_Tutorial.jpg").convert()
             self.background_image = pygame.transform.scale(self.background_image, (config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
         except pygame.error as e:
-            print(f"Error loading background image (assests/Croc_Tutorial.jpg): {e}")
+            print(f"Error loading background image: {e}")
             self.background_image = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
-            self.background_image.fill(config.GREEN)
-            print("Using a green placeholder for BoatRideTutorial background.")
+            self.background_image.fill((34, 139, 34))
 
     def _setup_characters(self):
         player_initial_x = config.SCREEN_WIDTH * 0.2
@@ -41,30 +42,43 @@ class BoatRideTutorial:
 
     def run(self):
         clock = pygame.time.Clock()
+        
+        # --- TIMER SETUP ---
+        countdown_seconds = 10
+        start_ticks = pygame.time.get_ticks() 
+        
+        waiting_to_start = True
         running = True
+        next_game_state = "level_select"
 
         while running:
-            # --- 1. Event Handling ---
+            # 1. Timer Logic
+            if waiting_to_start:
+                # Calculate remaining time
+                seconds_passed = (pygame.time.get_ticks() - start_ticks) // 1000
+                current_timer = max(0, countdown_seconds - seconds_passed)
+                
+                if current_timer <= 0:
+                    waiting_to_start = False
+            
+            # 2. Event Handling
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
-                    next_game_state = "quit" # Set next state to quit
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        running = False
-                        next_game_state = "level_select" # Go back to level select on Q
-
-                    if self.player.is_player_controlled:
-                        if event.key == pygame.K_a:
-                            self.player.move(-1)
-                        elif event.key == pygame.K_s:
-                            self.player.move(1)
-                        elif event.key == pygame.K_SPACE:
-                            self.player.jump()
-                        # Keeping 'J' as a keyboard basic attack option
-                        elif event.key == pygame.K_j: 
-                             if self.player.last_hit_by_basic_attack == 0:
-                                 self.player.attack("basic")
+                    return "quit"
+                
+                # Input only works after countdown
+                if not waiting_to_start:
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_q:
+                            running = False
+                        
+                        # Player Controls
+                        if event.key == pygame.K_a: self.player.move(-1)
+                        elif event.key == pygame.K_s: self.player.move(1)
+                        elif event.key == pygame.K_SPACE: self.player.jump()
+                        
+                        # Combat Keys
+                        elif event.key == pygame.K_j: self.player.attack("basic")
                         elif event.key == pygame.K_w:
                             if self.player.attack_hit_count >= self.player.MID_ATTACK_THRESHOLD:
                                 self.player.attack("mid")
@@ -72,165 +86,97 @@ class BoatRideTutorial:
                             if self.player.attack_hit_count >= self.player.SUPER_ATTACK_THRESHOLD:
                                 self.player.attack("super")
 
-                # NEW: Mouse Click Event for Player Basic Attack
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.player.is_player_controlled and event.button == 1: # Left mouse button
-                        distance_to_enemy = abs(self.player.rect.centerx - self.opponent.rect.centerx)
-                        if distance_to_enemy < 150: 
-                            if self.player.last_hit_by_basic_attack == 0:
-                                self.player.attack("basic")
+                    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        self.player.attack("basic")
 
-                elif event.type == pygame.KEYUP:
-                    if self.player.is_player_controlled:
-                        if event.key == pygame.K_a and self.player.vel_x < 0:
-                            self.player.stop_move()
-                        elif event.key == pygame.K_s and self.player.vel_x > 0:
+                    elif event.type == pygame.KEYUP:
+                        if event.key in [pygame.K_a, pygame.K_s]:
                             self.player.stop_move()
 
-            # --- 2. Update Game Logic ---
-            self.all_sprites.update()
+            # 3. Game State Updates (Only runs after countdown)
+            if not waiting_to_start:
+                self.all_sprites.update()
+                
+                # AI Logic for Opponent
+                ai_action = self.opponent.handle_ai(self.player.rect, self.player.is_attacking)
+                if ai_action:
+                    # Clean the action string (e.g., "basic_attack" -> "basic")
+                    self.opponent.attack(ai_action.replace("_attack", ""))
 
-            # --- 3. Enemy AI Decision ---
-            ai_action = self.opponent.handle_ai(self.player.rect, self.player.is_attacking)
-            if ai_action == "basic_attack":
-                self.opponent.attack("basic")
-            elif ai_action == "mid_attack":
-                self.opponent.attack("mid")
-            elif ai_action == "super_attack":
-                self.opponent.attack("super")
+                self._check_collisions()
 
-            # --- 4. Attack Collision Detection & Damage Application (REVISED) ---
-            # Player attacking opponent
-            if self.player.is_attacking and not self.player.has_dealt_hit_this_attack:
-                attack_range_rect = self.player.rect.inflate(50, 0)
-                if attack_range_rect.colliderect(self.opponent.rect) and not self.opponent.is_attacking:
-                    damage_dealt = None
-                    if self.player.state == "basic":
-                        damage_dealt = self.player.BASIC_ATTACK_DAMAGE
-                    elif self.player.state == "mid":
-                        damage_dealt = self.player.MID_ATTACK_DAMAGE
-                    elif self.player.state == "super":
-                        damage_dealt = self.player.SUPER_ATTACK_DAMAGE
+                # Death Check
+                if self.player.health <= 0 or self.opponent.health <= 0:
+                    winner = self.player.character_name if self.opponent.health <= 0 else self.opponent.character_name
+                    winner_screen = WinnerScreen(self.screen, winner)
+                    return winner_screen.run()
 
-                    if damage_dealt is not None:
-                        damage_success = self.opponent.take_damage(damage_dealt)
-                        if damage_success:
-                            self.player.attack_hit_count += 1
-                            print(f"Player hit count: {self.player.attack_hit_count}")
-                            self.player.has_dealt_hit_this_attack = True
+        # --- 4. Drawing ---
+            if self.background_image:
+                self.screen.blit(self.background_image, (0, 0))
+            
+            self.all_sprites.draw(self.screen)
+            self._draw_health_bar(self.screen, self.player, (50, 40), (0, 0, 255)) 
+            self._draw_health_bar(self.screen, self.opponent, (config.SCREEN_WIDTH - 250, 40), (255, 0, 0))
 
-            # Opponent attacking player
-            if self.opponent.is_attacking and not self.opponent.has_dealt_hit_this_attack:
-                attack_range_rect = self.opponent.rect.inflate(50, 0)
-                if attack_range_rect.colliderect(self.player.rect): # Removed 'and not self.player.is_attacking' here for initial test
-                    if not self.player.is_attacking: # Inner check to differentiate
-                        damage_dealt = None
-                        if self.opponent.state == "basic":
-                            damage_dealt = self.opponent.BASIC_ATTACK_DAMAGE
-                        elif self.opponent.state == "mid":
-                            damage_dealt = self.opponent.MID_ATTACK_DAMAGE
-                        elif self.opponent.state == "super":
-                            damage_dealt = self.opponent.SUPER_ATTACK_DAMAGE
+            # --- ADD THIS PART HERE ---
+            if waiting_to_start:
+                # 1. Darken the screen and show the big numbers
+                self._draw_countdown_overlay(current_timer)
+                # 2. Draw the actual button instructions on top
+                draw_controls_overlay(self.screen) 
 
-                        if damage_dealt is not None:
-                            damage_success = self.player.take_damage(damage_dealt)
-                            if damage_success:
-                                self.opponent.attack_hit_count += 1
-                                print(f"DEBUG: Enemy attack collision detected and player took damage! Enemy hit count: {self.opponent.attack_hit_count}")
-                                self.opponent.has_dealt_hit_this_attack = True
-                            else:
-                                print("DEBUG: Enemy attack hit player, but player was attacking so no damage taken.")
-                    else:
-                        print("DEBUG: Enemy attack collision, but player was attacking. No damage taken.")
+            pygame.display.flip()
+            clock.tick(60)
 
-            # --- 5. Win/Loss Condition Checks (CONSOLIDATED & CORRECTED FLOW) ---
-            if self.player.health <= 0:
-                print(f"{self.player.character_name} defeated! Game Over!")
-                # Opponent wins
-                winner_screen = WinnerScreen(self.screen, self.opponent.character_name)
-                next_game_state = winner_screen.run() # Run the winner screen and get its return value
-                running = False # Exit the tutorial loop
-            elif self.opponent.health <= 0:
-                print(f"{self.opponent.character_name} defeated! You won!")
-                # Player wins
-                winner_screen = WinnerScreen(self.screen, self.player.character_name)
-                next_game_state = winner_screen.run() # Run the winner screen and get its return value
-                running = False # Exit the tutorial loop
+        return next_game_state
 
-            # --- 6. Drawing (ONLY if game is still active) ---
-            if running: # Only draw the game elements if the game loop is still active
-                if self.background_image:
-                    self.screen.blit(self.background_image, (0, 0))
-                self.all_sprites.draw(self.screen)
-
-                self._draw_health_bar(self.screen, self.player, (50, 20), config.BLUE)
-                self._draw_health_bar(self.screen, self.opponent, (config.SCREEN_WIDTH - 250, 20), config.RED)
-
-        #Use these lines are diolog instructions
-                #font = pygame.font.Font(None, 60)
-                #text_surface = font.render("Welcome to BoatRideTutorial!", True, config.WHITE)
-                #text_rect = text_surface.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.1))
-                #self.screen.blit(text_surface, text_rect)
-
-                #Controls instructions
-                #instruction_font = pygame.font.Font(None, 40)
-                #instruction_surface = instruction_font.render(f"You are {self.player.character_name}. Opponent is {self.opponent.character_name}.", True, config.WHITE)
-                #instruction_rect = instruction_surface.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.2))
-                #self.screen.blit(instruction_surface, instruction_rect)
-
-                #controls_text = instruction_font.render("Controls: 'A' (left), 'S' (right), 'Mouse Click/J' (basic), 'W' (mid), 'E' (super), 'Space' (jump), 'Q' (quit)", True, config.WHITE)
-                #controls_rect = controls_text.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT * 0.9))
-                #self.screen.blit(controls_text, controls_rect)
-
-                # --- 7. Update Display and Control Frame Rate ---
-                pygame.display.flip()
-                clock.tick(60)
-        print("Exiting BoatRideTutorial.")
-        return "level_select"
+    def _check_collisions(self):
+        """Logic for checking if attacks hit their target."""
+        if self.player.is_attacking and not self.player.has_dealt_hit_this_attack:
+            # We inflate the rect to give the punch some reach
+            attack_rect = self.player.rect.inflate(60, 0)
+            if attack_rect.colliderect(self.opponent.rect):
+                if self.opponent.take_damage(self.player.BASIC_ATTACK_DAMAGE):
+                    self.player.attack_hit_count += 1
+                    self.player.has_dealt_hit_this_attack = True
 
     def _draw_health_bar(self, screen, character, position, color):
-        bar_width = 200
-        bar_height = 25
-        border_thickness = 3
-
-        health_percentage = character.health / 45.0
+        bar_width, bar_height = 200, 25
+        health_percentage = max(0, character.health / 45.0)
         current_bar_width = int(bar_width * health_percentage)
-        if current_bar_width < 0: # Ensure bar doesn't go negative
-            current_bar_width = 0
 
-        pygame.draw.rect(screen, config.GREY, (position[0], position[1], bar_width, bar_height), border_radius=5)
+        # Background (Grey)
+        pygame.draw.rect(screen, (50, 50, 50), (position[0], position[1], bar_width, bar_height), border_radius=5)
+        # Health (Blue/Red)
         pygame.draw.rect(screen, color, (position[0], position[1], current_bar_width, bar_height), border_radius=5)
-        pygame.draw.rect(screen, config.BLACK, (position[0], position[1], bar_width, bar_height), border_thickness, border_radius=5)
+        # Border
+        pygame.draw.rect(screen, (0, 0, 0), (position[0], position[1], bar_width, bar_height), 2, border_radius=5)
 
-        font = pygame.font.Font(None, 24)
-        name_text = font.render(character.character_name, True, config.BLACK)
-        screen.blit(name_text, (position[0], position[1] - 25))
+    def _draw_countdown_overlay(self, time_left):
+        """Creates a dimming effect and centered text for the 10s countdown."""
+        # Create a translucent surface
+        overlay = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 160)) 
+        self.screen.blit(overlay, (0, 0))
+        
+        # Draw the big number
+        font = pygame.font.SysFont("Arial", 120, bold=True)
+        text_surf = font.render(str(time_left), True, (255, 215, 0)) # Gold
+        text_rect = text_surf.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT // 2))
+        
+        # Draw "GET READY" text
+        sub_font = pygame.font.SysFont("Arial", 40)
+        sub_surf = sub_font.render("FIGHT STARTING...", True, (255, 255, 255))
+        sub_rect = sub_surf.get_rect(center=(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT // 2 + 100))
+        
+        self.screen.blit(text_surf, text_rect)
+        self.screen.blit(sub_surf, sub_rect)
 
-        hp_text = font.render(f"{character.health}/45 HP", True, config.BLACK)
-        screen.blit(hp_text, (position[0] + bar_width + 10, position[1] + (bar_height // 2) - hp_text.get_height() // 2))
-
+# Testing block
 if __name__ == "__main__":
     pygame.init()
-    pygame.font.init()
-
-    class Config:
-        SCREEN_WIDTH = 1000
-        SCREEN_HEIGHT = 700
-        GREEN = (0, 200, 0)
-        WHITE = (255, 255, 255)
-        BLUE = (0, 0, 255)
-        RED = (255, 0, 0)
-        BLACK = (0, 0, 0)
-        GREY = (150, 150, 150)
-        PLAYER_SPEED = 5
-        GRAVITY = 0.8
-        GROUND_HEIGHT = 50
-
-    config = Config()
-
-    test_screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
-    pygame.display.set_caption("BoatRideTutorial Test")
-
-    tutorial_stage = BoatRideTutorial(test_screen, "The Boat Man", "The Log Lady")
-    tutorial_stage.run()
+    test_screen = pygame.display.set_mode((1000, 700))
+    stage = BoatRideTutorial(test_screen, "Player 1", "AI Enemy")
+    stage.run()
     pygame.quit()
