@@ -70,7 +70,7 @@ class Player(pygame.sprite.Sprite):
         self.facing_right = True
         self.state = "idle"
         self.is_attacking = False
-        self.attack_cooldown = 0
+        self.attack_cooldown = 3
         self.attack_hit_count = 0
         self.has_dealt_hit_this_attack = False
         
@@ -82,7 +82,7 @@ class Player(pygame.sprite.Sprite):
         self.last_hit_by_basic_attack = 0
 
     def _load_all_sprites(self):
-        w, h = 100, 100
+        w, h = 200, 400
         path = None
         
         if self.character_name == "The Boat Man":
