@@ -14,7 +14,7 @@ def draw_controls_overlay(screen):
     # Show game controls on screen
     controls = [
         ("MOVE", "A / S Keys"),
-        ("JUMP", "Spacebar"),
+        ("JUMP", "alt"),
         ("BASIC ATTACK", "Left Click / J"),
         ("MID / SUPER", "W / E Keys")
     ]
@@ -86,9 +86,9 @@ class Player(pygame.sprite.Sprite):
         path = None
         
         if self.character_name == "The Boat Man":
-            path = "sprites/male_punch.png"
+            path = "assests/sprites/male_punch.png"
         elif self.character_name == "The Log Lady":
-            path = "sprites/female_punch.bmp"
+            path = "assests/sprites/female_punch.bmp"
 
         sheet = Spritesheet(path) if path else None
 
